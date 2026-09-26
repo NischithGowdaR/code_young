@@ -46,16 +46,18 @@ export class DevelopmentEmailService implements IEmailService {
     const pass = rawPass.replace(/\s+/g, '');
 
     try {
-      if (host.toLowerCase().includes('gmail')) {
+      if (host.toLowerCase().includes('gmail') || user.toLowerCase().includes('@gmail.com')) {
         return nodemailer.createTransport({
-          service: 'gmail',
+          host: 'smtp.gmail.com',
+          port: 465,
+          secure: true,
           auth: {
             user,
             pass,
           },
-          connectionTimeout: 5000,
-          greetingTimeout: 5000,
-          socketTimeout: 10000,
+          connectionTimeout: 10000,
+          greetingTimeout: 10000,
+          socketTimeout: 15000,
         });
       }
 
@@ -67,9 +69,9 @@ export class DevelopmentEmailService implements IEmailService {
           user,
           pass,
         },
-        connectionTimeout: 5000,
-        greetingTimeout: 5000,
-        socketTimeout: 10000,
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
       });
     } catch (err) {
       console.error('[EMAIL SERVICE] Failed to create nodemailer SMTP transporter:', err);
