@@ -13,6 +13,8 @@
     "build": "npm run build --workspace=server && npm run build --workspace=client",
     "build:client": "npm run build --workspace=client",
     "build:server": "npm run build --workspace=server",
+    "start": "node server/dist/index.js",
+    "start:server": "npm run start --workspace=server",
     "typecheck": "npm run typecheck --workspace=client && npm run typecheck --workspace=server",
     "lint": "npm run lint --workspace=client && npm run lint --workspace=server",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css}\"",
