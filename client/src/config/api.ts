@@ -1,19 +1,19 @@
 /**
  * API Configuration & Base URL
- * - If VITE_API_BASE_URL is set in environment, uses that URL (e.g. https://codeyoung-production-39f3.up.railway.app).
- * - Otherwise defaults to relative path `/api` (which Vite proxies to http://localhost:4000 in local dev).
+ * - If VITE_API_BASE_URL is set in environment, uses that URL.
+ * - Otherwise defaults to your live deployed Render backend: https://code-young.onrender.com
  */
 
 const envUrl =
   typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_API_BASE_URL : undefined;
 
-const RAW_URL = envUrl || 'https://codeyoung-production-39f3.up.railway.app';
+const RAW_URL = envUrl || 'https://code-young.onrender.com';
 
 export const API_BASE_URL = RAW_URL.replace(/\/+$/, '');
 
 /**
  * Builds a complete URL for any API endpoint.
- * Example: apiUrl('/api/auth/login') -> '/api/auth/login' (or 'https://your-domain.com/api/auth/login' if configured)
+ * Example: apiUrl('/api/auth/login') -> 'https://code-young.onrender.com/api/auth/login'
  */
 export const apiUrl = (path: string): string => {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
