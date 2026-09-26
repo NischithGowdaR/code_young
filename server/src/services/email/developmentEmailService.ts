@@ -338,6 +338,35 @@ export class DevelopmentEmailService implements IEmailService {
       }
     }
 
+    const brevoApiKey = process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY;
+    if (brevoApiKey) {
+      try {
+        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'api-key': brevoApiKey.trim(),
+          },
+          body: JSON.stringify({
+            sender: { name: 'CodeYoung', email: process.env.SMTP_USER || 'nischitgowdar71@gmail.com' },
+            to: [{ email: params.recipientEmail, name: params.recipientName }],
+            subject,
+            textContent: textBody,
+            htmlContent: htmlBody,
+          }),
+        });
+        const resData = await res.json().catch(() => ({}));
+        if (res.ok) {
+          console.log(`[BREVO API SUCCESS] Delivered confirmation email to ${params.recipientEmail}:`, resData);
+          return { success: true, messageId };
+        } else {
+          console.error(`[BREVO API ERROR ${res.status}] to ${params.recipientEmail}:`, resData);
+        }
+      } catch (err) {
+        console.error('[BREVO API NETWORK ERROR]:', err);
+      }
+    }
+
     const transporter = this.getTransporter();
     if (transporter) {
       try {
@@ -418,6 +447,35 @@ export class DevelopmentEmailService implements IEmailService {
         }
       } catch (err) {
         console.error('[RESEND API ERROR]:', err);
+      }
+    }
+
+    const brevoApiKeyCancel = process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY;
+    if (brevoApiKeyCancel) {
+      try {
+        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'api-key': brevoApiKeyCancel.trim(),
+          },
+          body: JSON.stringify({
+            sender: { name: 'CodeYoung', email: process.env.SMTP_USER || 'nischitgowdar71@gmail.com' },
+            to: [{ email: params.recipientEmail, name: params.recipientName }],
+            subject,
+            textContent: textBody,
+            htmlContent: htmlBody,
+          }),
+        });
+        const resData = await res.json().catch(() => ({}));
+        if (res.ok) {
+          console.log(`[BREVO API SUCCESS] Delivered cancellation email to ${params.recipientEmail}:`, resData);
+          return { success: true, messageId };
+        } else {
+          console.error(`[BREVO API ERROR ${res.status}] to ${params.recipientEmail}:`, resData);
+        }
+      } catch (err) {
+        console.error('[BREVO API NETWORK ERROR]:', err);
       }
     }
 
