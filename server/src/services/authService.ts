@@ -91,16 +91,16 @@ export const sendRegistrationOtp = async (data: SendRegistrationOtpInput) => {
 
   if (result.rawCode) {
     const emailService = getEmailService();
-    // Dispatch email in background so the UI receives response instantly
-    emailService.sendOtpEmail(normalizedEmail, data.name || 'Parent', result.rawCode).catch((err) => {
+    try {
+      await emailService.sendOtpEmail(normalizedEmail, data.name || 'Parent', result.rawCode);
+    } catch (err) {
       console.error('[EMAIL OTP DISPATCH ERROR]:', err);
-    });
+    }
   }
 
   return {
     message: 'Verification OTP has been sent to your email address.',
     cooldownSeconds: result.cooldownSeconds,
-    otp: result.rawCode,
   };
 };
 

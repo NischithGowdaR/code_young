@@ -54,13 +54,9 @@ export const RegisterPage: React.FC = () => {
     try {
       const result = await sendRegistrationOtp(email, name);
       setStep('OTP');
+      setOtpCode('');
       setCooldown(result.cooldownSeconds || 60);
-      if (result.otp) {
-        setOtpCode(result.otp);
-        setOtpSuccess(`Verification code: ${result.otp} (Sent to ${email})`);
-      } else {
-        setOtpSuccess(`Verification code sent to ${email}`);
-      }
+      setOtpSuccess(`A 6-digit verification code has been sent to ${email}. Please check your email inbox.`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to send verification code.';
       setFormError(msg);
@@ -75,13 +71,8 @@ export const RegisterPage: React.FC = () => {
     try {
       const result = await sendRegistrationOtp(email, name);
       setCooldown(result.cooldownSeconds || 60);
-      if (result.otp) {
-        setOtpCode(result.otp);
-        setOtpSuccess(`A new verification code: ${result.otp} (Sent to ${email})`);
-      } else {
-        setOtpSuccess(`A new verification code has been sent to ${email}`);
-        setOtpCode('');
-      }
+      setOtpCode('');
+      setOtpSuccess(`A new verification code has been sent to ${email}. Please check your email inbox.`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to resend code.';
       setFormError(msg);

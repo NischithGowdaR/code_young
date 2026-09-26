@@ -94,16 +94,17 @@ trialRouter.post('/:id/send-otp', async (req: Request, res: Response, next: Next
 
     if (result.rawCode && record.parentEmail) {
       const emailService = getEmailService();
-      emailService.sendOtpEmail(record.parentEmail, record.parentName, result.rawCode).catch((err) => {
+      try {
+        await emailService.sendOtpEmail(record.parentEmail, record.parentName, result.rawCode);
+      } catch (err) {
         console.error('[TRIAL OTP EMAIL ERROR]:', err);
-      });
+      }
     }
 
     res.status(200).json({
-      message: 'OTP sent successfully to parent phone number',
+      message: 'OTP sent successfully to parent email address',
       expiresAt: result.expiresAt,
       cooldownSeconds: result.cooldownSeconds,
-      otp: process.env.NODE_ENV === 'test' ? undefined : result.rawCode,
     });
   } catch (err) {
     next(err);
@@ -125,16 +126,17 @@ trialRouter.post('/:id/resend-otp', async (req: Request, res: Response, next: Ne
 
     if (result.rawCode && record.parentEmail) {
       const emailService = getEmailService();
-      emailService.sendOtpEmail(record.parentEmail, record.parentName, result.rawCode).catch((err) => {
+      try {
+        await emailService.sendOtpEmail(record.parentEmail, record.parentName, result.rawCode);
+      } catch (err) {
         console.error('[TRIAL OTP RESEND EMAIL ERROR]:', err);
-      });
+      }
     }
 
     res.status(200).json({
-      message: 'OTP resent successfully',
+      message: 'OTP resent successfully to parent email address',
       expiresAt: result.expiresAt,
       cooldownSeconds: result.cooldownSeconds,
-      otp: process.env.NODE_ENV === 'test' ? undefined : result.rawCode,
     });
   } catch (err) {
     next(err);

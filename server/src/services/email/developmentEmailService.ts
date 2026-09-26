@@ -39,7 +39,7 @@ export class DevelopmentEmailService implements IEmailService {
     const rawPass = process.env.SMTP_PASS || 'wpwv bkzk wkcs nuyw';
     const host = process.env.SMTP_HOST || 'smtp.gmail.com';
 
-    if (!user || !rawPass || !host) {
+    if (!user || !rawPass) {
       return null;
     }
 
@@ -48,30 +48,22 @@ export class DevelopmentEmailService implements IEmailService {
     try {
       if (host.toLowerCase().includes('gmail') || user.toLowerCase().includes('@gmail.com')) {
         return nodemailer.createTransport({
-          host: 'smtp.gmail.com',
-          port: 465,
-          secure: true,
+          service: 'gmail',
           auth: {
             user: user.trim(),
             pass,
           },
-          connectionTimeout: 10000,
-          greetingTimeout: 10000,
-          socketTimeout: 15000,
         });
       }
 
       return nodemailer.createTransport({
         host: host.trim(),
-        port: parseInt(process.env.SMTP_PORT || '587', 10),
+        port: parseInt(process.env.SMTP_PORT || '465', 10),
         secure: process.env.SMTP_SECURE === 'true' || process.env.SMTP_PORT === '465',
         auth: {
           user: user.trim(),
           pass,
         },
-        connectionTimeout: 10000,
-        greetingTimeout: 10000,
-        socketTimeout: 15000,
       });
     } catch (err) {
       console.error('[EMAIL SERVICE] Failed to create nodemailer SMTP transporter:', err);
