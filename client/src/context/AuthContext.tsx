@@ -20,7 +20,7 @@ interface AuthContextType {
   sendRegistrationOtp: (
     email: string,
     name?: string
-  ) => Promise<{ message: string; cooldownSeconds: number }>;
+  ) => Promise<{ message: string; cooldownSeconds: number; otp?: string }>;
   register: (
     name: string,
     email: string,

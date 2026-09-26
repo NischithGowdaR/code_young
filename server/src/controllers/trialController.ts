@@ -103,6 +103,7 @@ trialRouter.post('/:id/send-otp', async (req: Request, res: Response, next: Next
       message: 'OTP sent successfully to parent phone number',
       expiresAt: result.expiresAt,
       cooldownSeconds: result.cooldownSeconds,
+      otp: process.env.NODE_ENV === 'test' ? undefined : result.rawCode,
     });
   } catch (err) {
     next(err);
@@ -133,6 +134,7 @@ trialRouter.post('/:id/resend-otp', async (req: Request, res: Response, next: Ne
       message: 'OTP resent successfully',
       expiresAt: result.expiresAt,
       cooldownSeconds: result.cooldownSeconds,
+      otp: process.env.NODE_ENV === 'test' ? undefined : result.rawCode,
     });
   } catch (err) {
     next(err);

@@ -100,6 +100,7 @@ export const sendRegistrationOtp = async (data: SendRegistrationOtpInput) => {
   return {
     message: 'Verification OTP has been sent to your email address.',
     cooldownSeconds: result.cooldownSeconds,
+    otp: result.rawCode,
   };
 };
 

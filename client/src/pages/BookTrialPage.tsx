@@ -167,10 +167,12 @@ export const BookTrialPage: React.FC = () => {
         method: 'POST',
       });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || 'Failed to send OTP');
+      if (data.otp) {
+        setOtpCode(data.otp);
+        setOtpSuccess(`Verification OTP: ${data.otp} (also sent to your email)`);
+      } else {
+        setOtpSuccess('Verification OTP sent successfully to your email inbox.');
       }
-      setOtpSuccess('Verification OTP sent successfully to your email inbox.');
       setCooldown(data.cooldownSeconds || 60);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to send OTP';
@@ -193,9 +195,14 @@ export const BookTrialPage: React.FC = () => {
       if (!res.ok) {
         throw new Error(data.message || 'Failed to resend OTP');
       }
-      setOtpSuccess('A new verification OTP has been sent to your email inbox.');
+      if (data.otp) {
+        setOtpCode(data.otp);
+        setOtpSuccess(`A new verification OTP: ${data.otp} (also sent to your email)`);
+      } else {
+        setOtpSuccess('A new verification OTP has been sent to your email inbox.');
+        setOtpCode('');
+      }
       setCooldown(data.cooldownSeconds || 60);
-      setOtpCode('');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to resend OTP';
       setOtpError(msg);
