@@ -194,12 +194,44 @@ export class DevelopmentEmailService implements IEmailService {
             html: htmlBody,
           }),
         });
+        const resData = await res.json().catch(() => ({}));
         if (res.ok) {
-          console.log(`[RESEND API] Successfully sent OTP email to ${email}`);
+          console.log(`[RESEND API SUCCESS] Delivered OTP email to ${email}:`, resData);
           return { success: true, messageId };
+        } else {
+          console.error(`[RESEND API ERROR ${res.status}] to ${email}:`, resData);
         }
       } catch (err) {
-        console.error('[RESEND API ERROR]:', err);
+        console.error('[RESEND API NETWORK ERROR]:', err);
+      }
+    }
+
+    const brevoApiKey = process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY;
+    if (brevoApiKey) {
+      try {
+        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'api-key': brevoApiKey.trim(),
+          },
+          body: JSON.stringify({
+            sender: { name: 'CodeYoung', email: process.env.SMTP_USER || 'nischitgowdar71@gmail.com' },
+            to: [{ email, name: name || 'Parent' }],
+            subject,
+            textContent: textBody,
+            htmlContent: htmlBody,
+          }),
+        });
+        const resData = await res.json().catch(() => ({}));
+        if (res.ok) {
+          console.log(`[BREVO API SUCCESS] Delivered OTP email to ${email}:`, resData);
+          return { success: true, messageId };
+        } else {
+          console.error(`[BREVO API ERROR ${res.status}] to ${email}:`, resData);
+        }
+      } catch (err) {
+        console.error('[BREVO API NETWORK ERROR]:', err);
       }
     }
 
@@ -219,7 +251,7 @@ export class DevelopmentEmailService implements IEmailService {
       }
     } else {
       if (process.env.NODE_ENV !== 'test') {
-        console.log(`[EMAIL OTP] (No SMTP configured) Code [${code}] for ${email}`);
+        console.log(`[EMAIL OTP] (No SMTP/API configured) Code [${code}] for ${email}`);
       }
     }
 
