@@ -1,23 +1,19 @@
 /**
  * API Configuration & Base URL
- * Defaults to the live deployed Railway backend in production/dev: https://codeyoung-production-39f3.up.railway.app
- * In test environment, uses relative paths so mock spies can assert on standard endpoints.
+ * - If VITE_API_BASE_URL is set in environment, uses that URL (e.g. https://codeyoung-production-39f3.up.railway.app).
+ * - Otherwise defaults to relative path `/api` (which Vite proxies to http://localhost:4000 in local dev).
  */
-
-const isTest =
-  (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test') ||
-  (typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'test');
 
 const envUrl =
   typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_API_BASE_URL : undefined;
 
-const RAW_URL = isTest ? '' : (envUrl || 'https://codeyoung-production-39f3.up.railway.app');
+const RAW_URL = envUrl || '';
 
 export const API_BASE_URL = RAW_URL.replace(/\/+$/, '');
 
 /**
  * Builds a complete URL for any API endpoint.
- * Example: apiUrl('/api/auth/login') -> 'https://codeyoung-production-39f3.up.railway.app/api/auth/login'
+ * Example: apiUrl('/api/auth/login') -> '/api/auth/login' (or 'https://your-domain.com/api/auth/login' if configured)
  */
 export const apiUrl = (path: string): string => {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
