@@ -280,6 +280,32 @@ export class DevelopmentEmailService implements IEmailService {
 
     this.sentEmails.push(record);
 
+    const resendApiKey = process.env.RESEND_API_KEY;
+    if (resendApiKey) {
+      try {
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${resendApiKey.trim()}`,
+          },
+          body: JSON.stringify({
+            from: process.env.RESEND_FROM || 'CodeYoung <onboarding@resend.dev>',
+            to: [params.recipientEmail],
+            subject,
+            text: textBody,
+            html: htmlBody,
+          }),
+        });
+        if (res.ok) {
+          console.log(`[RESEND API] Successfully sent confirmation email to ${params.recipientEmail}`);
+          return { success: true, messageId };
+        }
+      } catch (err) {
+        console.error('[RESEND API ERROR]:', err);
+      }
+    }
+
     const transporter = this.getTransporter();
     if (transporter) {
       try {
@@ -336,6 +362,32 @@ export class DevelopmentEmailService implements IEmailService {
     };
 
     this.sentEmails.push(record);
+
+    const resendApiKey = process.env.RESEND_API_KEY;
+    if (resendApiKey) {
+      try {
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${resendApiKey.trim()}`,
+          },
+          body: JSON.stringify({
+            from: process.env.RESEND_FROM || 'CodeYoung <onboarding@resend.dev>',
+            to: [params.recipientEmail],
+            subject,
+            text: textBody,
+            html: htmlBody,
+          }),
+        });
+        if (res.ok) {
+          console.log(`[RESEND API] Successfully sent cancellation email to ${params.recipientEmail}`);
+          return { success: true, messageId };
+        }
+      } catch (err) {
+        console.error('[RESEND API ERROR]:', err);
+      }
+    }
 
     const transporter = this.getTransporter();
     if (transporter) {
