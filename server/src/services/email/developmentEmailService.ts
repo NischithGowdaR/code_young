@@ -43,7 +43,7 @@ export class DevelopmentEmailService implements IEmailService {
       return null;
     }
 
-    const pass = rawPass.replace(/\s+/g, '');
+    const pass = rawPass.replace(/['"\s]+/g, '');
 
     try {
       if (host.toLowerCase().includes('gmail') || user.toLowerCase().includes('@gmail.com')) {
@@ -52,7 +52,7 @@ export class DevelopmentEmailService implements IEmailService {
           port: 465,
           secure: true,
           auth: {
-            user,
+            user: user.trim(),
             pass,
           },
           connectionTimeout: 10000,
@@ -62,11 +62,11 @@ export class DevelopmentEmailService implements IEmailService {
       }
 
       return nodemailer.createTransport({
-        host,
+        host: host.trim(),
         port: parseInt(process.env.SMTP_PORT || '587', 10),
         secure: process.env.SMTP_SECURE === 'true' || process.env.SMTP_PORT === '465',
         auth: {
-          user,
+          user: user.trim(),
           pass,
         },
         connectionTimeout: 10000,
@@ -80,12 +80,8 @@ export class DevelopmentEmailService implements IEmailService {
   }
 
   private getFromAddress(): string {
-    return (
-      process.env.EMAIL_FROM ||
-      process.env.SMTP_FROM ||
-      process.env.SMTP_USER ||
-      'no-reply@codeyoung.example'
-    );
+    const user = process.env.SMTP_USER || 'nischitgowdar71@gmail.com';
+    return `"CodeYoung" <${user.trim()}>`;
   }
 
   async sendEmail(payload: EmailPayload): Promise<{ success: boolean; messageId: string }> {
