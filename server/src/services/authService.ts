@@ -91,7 +91,10 @@ export const sendRegistrationOtp = async (data: SendRegistrationOtpInput) => {
 
   if (result.rawCode) {
     const emailService = getEmailService();
-    await emailService.sendOtpEmail(normalizedEmail, data.name || 'Parent', result.rawCode);
+    // Dispatch email in background so the UI receives response instantly
+    emailService.sendOtpEmail(normalizedEmail, data.name || 'Parent', result.rawCode).catch((err) => {
+      console.error('[EMAIL OTP DISPATCH ERROR]:', err);
+    });
   }
 
   return {

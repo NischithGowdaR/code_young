@@ -93,12 +93,10 @@ trialRouter.post('/:id/send-otp', async (req: Request, res: Response, next: Next
     const result = await otpService.sendOtp(record.parentPhone, 'PHONE_VERIFICATION');
 
     if (result.rawCode && record.parentEmail) {
-      try {
-        const emailService = getEmailService();
-        await emailService.sendOtpEmail(record.parentEmail, record.parentName, result.rawCode);
-      } catch {
-        // ignore email errors
-      }
+      const emailService = getEmailService();
+      emailService.sendOtpEmail(record.parentEmail, record.parentName, result.rawCode).catch((err) => {
+        console.error('[TRIAL OTP EMAIL ERROR]:', err);
+      });
     }
 
     res.status(200).json({
@@ -125,12 +123,10 @@ trialRouter.post('/:id/resend-otp', async (req: Request, res: Response, next: Ne
     const result = await otpService.resendOtp(record.parentPhone, 'PHONE_VERIFICATION');
 
     if (result.rawCode && record.parentEmail) {
-      try {
-        const emailService = getEmailService();
-        await emailService.sendOtpEmail(record.parentEmail, record.parentName, result.rawCode);
-      } catch {
-        // ignore email errors
-      }
+      const emailService = getEmailService();
+      emailService.sendOtpEmail(record.parentEmail, record.parentName, result.rawCode).catch((err) => {
+        console.error('[TRIAL OTP RESEND EMAIL ERROR]:', err);
+      });
     }
 
     res.status(200).json({

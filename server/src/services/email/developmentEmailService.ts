@@ -53,6 +53,9 @@ export class DevelopmentEmailService implements IEmailService {
             user,
             pass,
           },
+          connectionTimeout: 5000,
+          greetingTimeout: 5000,
+          socketTimeout: 10000,
         });
       }
 
@@ -64,6 +67,9 @@ export class DevelopmentEmailService implements IEmailService {
           user,
           pass,
         },
+        connectionTimeout: 5000,
+        greetingTimeout: 5000,
+        socketTimeout: 10000,
       });
     } catch (err) {
       console.error('[EMAIL SERVICE] Failed to create nodemailer SMTP transporter:', err);
