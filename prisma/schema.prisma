@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  PARENT
+  MENTOR
+  ADMIN
+}
+
+enum Course {
+  MATHEMATICS
+  CODING
+  ENGLISH
+  SCIENCE
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum OtpPurpose {
+  PHONE_VERIFICATION
+  PASSWORD_RESET
+  LOGIN
+}
+
+model User {
+  id           String         @id @default(uuid())
+  name         String
+  email        String         @unique
+  phoneNumber  String?        @unique
+  passwordHash String
+  role         UserRole       @default(PARENT)
+  timezone     String         @default("UTC")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  bookings     Booking[]
+  refreshTokens RefreshToken[]
+
+  @@index([email])
+  @@index([phoneNumber])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  revoked   Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([tokenHash])
+}
+
+model Mentor {
+  id               String               @id @default(uuid())
+  name             String
+  email            String               @unique
+  timezone         String               @default("UTC")
+  active           Boolean              @default(true)
+  maxDailyBookings Int                  @default(5)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  availabilities   MentorAvailability[]
+  bookings         Booking[]
+
+  @@index([email])
+  @@index([active])
+}
+
+model MentorAvailability {
+  id             String   @id @default(uuid())
+  mentorId       String
+  dayOfWeek      Int
+  startLocalTime String
+  endLocalTime   String
+  active         Boolean  @default(true)
+
+  mentor         Mentor   @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+
+  @@index([mentorId, dayOfWeek])
+}
+
+model Booking {
+  id                     String        @id @default(uuid())
+  parentId               String
+  mentorId               String
+  course                 Course
+  studentGrade           String
+  startUtc               DateTime
+  endUtc                 DateTime
+  parentTimezone         String
+  mentorTimezoneSnapshot String
+  classLink              String?
+  status                 BookingStatus @default(CONFIRMED)
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+
+  parent                 User          @relation(fields: [parentId], references: [id])
+  mentor                 Mentor        @relation(fields: [mentorId], references: [id])
+
+  @@index([mentorId, startUtc, endUtc])
+  @@index([parentId, startUtc])
+  @@index([status])
+}
+
+model OtpVerification {
+  id          String     @id @default(uuid())
+  phoneNumber String
+  purpose     OtpPurpose
+  codeHash    String
+  expiresAt   DateTime
+  attempts    Int        @default(0)
+  verifiedAt  DateTime?
+  createdAt   DateTime   @default(now())
+
+  @@index([phoneNumber, purpose])
+}
