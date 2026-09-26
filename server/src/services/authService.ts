@@ -114,6 +114,22 @@ export const registerUser = async (data: RegisterInput) => {
     throw new AppError('User with this email already exists', 409, 'Conflict');
   }
 
+  const cleanPhone =
+    data.phoneNumber && data.phoneNumber.trim() !== '' ? data.phoneNumber.trim() : null;
+
+  if (cleanPhone) {
+    const existingPhone = await prisma.user.findUnique({
+      where: { phoneNumber: cleanPhone },
+    });
+    if (existingPhone) {
+      throw new AppError(
+        'A user with this phone number is already registered. Please use another phone number or leave it blank.',
+        409,
+        'Conflict'
+      );
+    }
+  }
+
   // If OTP code is provided, verify it
   if (data.otpCode) {
     const emailOtpStore = new DevelopmentOtpService();
@@ -122,24 +138,39 @@ export const registerUser = async (data: RegisterInput) => {
 
   const passwordHash = await bcrypt.hash(data.password, 10);
 
-  const user = await prisma.user.create({
-    data: {
-      name: data.name.trim(),
-      email: normalizedEmail,
-      phoneNumber: data.phoneNumber ? data.phoneNumber.trim() : null,
-      passwordHash,
-      role: UserRole.PARENT,
-      timezone: data.timezone || 'Asia/Kolkata',
-    },
-  });
+  try {
+    const user = await prisma.user.create({
+      data: {
+        name: data.name.trim(),
+        email: normalizedEmail,
+        phoneNumber: cleanPhone,
+        passwordHash,
+        role: UserRole.PARENT,
+        timezone: data.timezone || 'Asia/Kolkata',
+      },
+    });
 
-  const { accessToken, refreshToken } = await generateTokens(user.id, user.email, user.role);
+    const { accessToken, refreshToken } = await generateTokens(user.id, user.email, user.role);
 
-  return {
-    user: sanitizeUser(user),
-    accessToken,
-    refreshToken,
-  };
+    return {
+      user: sanitizeUser(user),
+      accessToken,
+      refreshToken,
+    };
+  } catch (err: unknown) {
+    if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'P2002') {
+      const target = (err as { meta?: { target?: string[] } }).meta?.target;
+      if (target && target.includes('phoneNumber')) {
+        throw new AppError(
+          'This phone number is already registered to another account. Please provide a different number or leave it blank.',
+          409,
+          'Conflict'
+        );
+      }
+      throw new AppError('An account with this email or phone number already exists.', 409, 'Conflict');
+    }
+    throw err;
+  }
 };
 
 export const loginUser = async (data: LoginInput) => {
