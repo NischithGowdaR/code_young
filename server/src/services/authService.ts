@@ -12,7 +12,6 @@ import {
 import { RegisterInput, LoginInput, SendRegistrationOtpInput } from '../schemas/authSchemas.js';
 import { getEmailService } from './email/developmentEmailService.js';
 import { DevelopmentOtpService } from './otp/developmentOtpService.js';
-import { getOtpService } from './otp/otpServiceFactory.js';
 import { AppError } from '../utils/errors.js';
 
 export interface UserResponse {
