@@ -23,7 +23,10 @@ export const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      // Allow any origin (including localhost, vercel, render, railway, etc.)
+      callback(null, true);
+    },
     credentials: true,
   })
 );

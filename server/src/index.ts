@@ -9,10 +9,11 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 import { app } from './app.js';
 
-const PORT = process.env.PORT || 4000;
+const PORT = Number(process.env.PORT) || 4000;
+const HOST = '0.0.0.0';
 
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`🚀 CodeYoung API server listening on http://${HOST}:${PORT}`);
   if (process.env.SMTP_USER) {
     console.log(`📧 SMTP Email configured for: ${process.env.SMTP_USER}`);
   }

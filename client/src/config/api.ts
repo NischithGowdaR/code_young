@@ -7,7 +7,7 @@
 const envUrl =
   typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_API_BASE_URL : undefined;
 
-const RAW_URL = envUrl || '';
+const RAW_URL = envUrl || 'https://codeyoung-production-39f3.up.railway.app';
 
 export const API_BASE_URL = RAW_URL.replace(/\/+$/, '');
 
