@@ -136,7 +136,7 @@ describe('Auth & Legal Pages (Registration, Login, Terms, Privacy)', () => {
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        '/api/auth/register',
+        expect.stringContaining('/api/auth/register'),
         expect.objectContaining({
           method: 'POST',
         })

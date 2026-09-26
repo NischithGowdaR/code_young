@@ -20,16 +20,37 @@ import { AppError } from './utils/errors.js';
 
 export const app = express();
 
-app.use(helmet());
+// Trust reverse proxy on cloud deployments (Railway, Render, etc.)
+app.set('trust proxy', 1);
+
 app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow any origin (including localhost, vercel, render, railway, etc.)
-      callback(null, true);
-    },
-    credentials: true,
+  helmet({
+    crossOriginResourcePolicy: false,
+    crossOriginEmbedderPolicy: false,
   })
 );
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    // Dynamically allow requesting origin with credentials
+    callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'Cookie',
+    'Accept',
+    'Origin',
+    'X-Requested-With',
+  ],
+  exposedHeaders: ['Set-Cookie'],
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
 

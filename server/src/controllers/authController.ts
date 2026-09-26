@@ -15,21 +15,31 @@ export const authRouter = express.Router();
 const COOKIE_NAME = 'refreshToken';
 
 const setRefreshTokenCookie = (res: express.Response, refreshToken: string) => {
+  const isProduction =
+    process.env.NODE_ENV === 'production' ||
+    process.env.RAILWAY_ENVIRONMENT !== undefined ||
+    process.env.RENDER !== undefined;
+
   res.cookie(COOKIE_NAME, refreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/api/auth',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+    path: '/',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 };
 
 const clearRefreshTokenCookie = (res: express.Response) => {
+  const isProduction =
+    process.env.NODE_ENV === 'production' ||
+    process.env.RAILWAY_ENVIRONMENT !== undefined ||
+    process.env.RENDER !== undefined;
+
   res.clearCookie(COOKIE_NAME, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/api/auth',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+    path: '/',
   });
 };
 
