@@ -35,7 +35,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_BASE = '/api/auth';
+import { apiUrl } from '../config/api.js';
+
+const API_BASE = apiUrl('/api/auth');
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);

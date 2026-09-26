@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { AdminHeader } from '../components/AdminHeader.js';
 import { Footer } from '../components/Footer.js';
 import { useAuth } from '../context/AuthContext.js';
+import { apiUrl } from '../config/api.js';
 
 interface AdminMentor {
   id: string;
@@ -31,7 +32,7 @@ export const AdminMentorsPage: React.FC = () => {
       const headers: Record<string, string> = {};
       if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
 
-      const res = await fetch('/api/admin/mentors', { headers });
+      const res = await fetch(apiUrl('/api/admin/mentors'), { headers });
       const data = await res.json();
 
       if (!res.ok) {
@@ -63,7 +64,7 @@ export const AdminMentorsPage: React.FC = () => {
       };
       if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
 
-      const res = await fetch(`/api/admin/mentors/${mentor.id}/status`, {
+      const res = await fetch(apiUrl(`/api/admin/mentors/${mentor.id}/status`), {
         method: 'PATCH',
         headers,
         body: JSON.stringify({ active: newActiveState }),

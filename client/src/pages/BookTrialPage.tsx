@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { Header } from '../components/Header.js';
 import { Footer } from '../components/Footer.js';
 import { useAuth } from '../context/AuthContext.js';
+import { apiUrl } from '../config/api.js';
 
 const TIMEZONES = [
   { value: 'America/New_York', label: 'US - Eastern Time (America/New_York)' },
@@ -162,7 +163,7 @@ export const BookTrialPage: React.FC = () => {
     setIsSendingOtp(true);
     setOtpError(null);
     try {
-      const res = await fetch(`/api/trial-requests/${trialRequestId}/send-otp`, {
+      const res = await fetch(apiUrl(`/api/trial-requests/${trialRequestId}/send-otp`), {
         method: 'POST',
       });
       const data = await res.json();
@@ -185,7 +186,7 @@ export const BookTrialPage: React.FC = () => {
     setOtpError(null);
     setOtpSuccess(null);
     try {
-      const res = await fetch(`/api/trial-requests/${trialSession.trialRequestId}/resend-otp`, {
+      const res = await fetch(apiUrl(`/api/trial-requests/${trialSession.trialRequestId}/resend-otp`), {
         method: 'POST',
       });
       const data = await res.json();
@@ -211,7 +212,7 @@ export const BookTrialPage: React.FC = () => {
         ...data,
         studentSubject: 'General Curriculum',
       };
-      const res = await fetch('/api/trial-requests', {
+      const res = await fetch(apiUrl('/api/trial-requests'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -254,7 +255,7 @@ export const BookTrialPage: React.FC = () => {
     setOtpError(null);
 
     try {
-      const res = await fetch(`/api/trial-requests/${trialSession.trialRequestId}/verify-otp`, {
+      const res = await fetch(apiUrl(`/api/trial-requests/${trialSession.trialRequestId}/verify-otp`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: otpCode.trim() }),
@@ -295,7 +296,7 @@ export const BookTrialPage: React.FC = () => {
           timezone: selectedTimezone,
         });
 
-        const res = await fetch(`/api/availability?${params.toString()}`);
+        const res = await fetch(apiUrl(`/api/availability?${params.toString()}`));
         const data = await res.json();
 
         if (!res.ok) {
@@ -334,7 +335,7 @@ export const BookTrialPage: React.FC = () => {
         headers['Authorization'] = `Bearer ${accessToken}`;
       }
 
-      const res = await fetch('/api/bookings', {
+      const res = await fetch(apiUrl('/api/bookings'), {
         method: 'POST',
         headers,
         body: JSON.stringify({

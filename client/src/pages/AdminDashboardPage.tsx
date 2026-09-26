@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AdminHeader } from '../components/AdminHeader.js';
 import { Footer } from '../components/Footer.js';
 import { useAuth } from '../context/AuthContext.js';
+import { apiUrl } from '../config/api.js';
 
 interface MentorItem {
   id: string;
@@ -52,8 +53,8 @@ export const AdminDashboardPage: React.FC = () => {
         if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
 
         const [resMentors, resBookings] = await Promise.all([
-          fetch('/api/admin/mentors', { headers }),
-          fetch('/api/admin/bookings', { headers }),
+          fetch(apiUrl('/api/admin/mentors'), { headers }),
+          fetch(apiUrl('/api/admin/bookings'), { headers }),
         ]);
 
         const dataMentors = await resMentors.json();

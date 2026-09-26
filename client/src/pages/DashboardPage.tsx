@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header.js';
 import { Footer } from '../components/Footer.js';
 import { useAuth } from '../context/AuthContext.js';
+import { apiUrl } from '../config/api.js';
 
 interface DashboardData {
   user: {
@@ -66,7 +67,7 @@ export const DashboardPage: React.FC = () => {
           headers['Authorization'] = `Bearer ${accessToken}`;
         }
 
-        const res = await fetch('/api/parent/dashboard', { headers });
+        const res = await fetch(apiUrl('/api/parent/dashboard'), { headers });
         const result = await res.json();
 
         if (!res.ok) {

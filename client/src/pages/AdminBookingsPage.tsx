@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { AdminHeader } from '../components/AdminHeader.js';
 import { Footer } from '../components/Footer.js';
 import { useAuth } from '../context/AuthContext.js';
+import { apiUrl } from '../config/api.js';
 
 interface AdminBooking {
   id: string;
@@ -46,7 +47,7 @@ export const AdminBookingsPage: React.FC = () => {
       const headers: Record<string, string> = {};
       if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
 
-      const res = await fetch('/api/admin/bookings', { headers });
+      const res = await fetch(apiUrl('/api/admin/bookings'), { headers });
       const data = await res.json();
 
       if (!res.ok) {
@@ -75,7 +76,7 @@ export const AdminBookingsPage: React.FC = () => {
       const headers: Record<string, string> = {};
       if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
 
-      const res = await fetch(`/api/admin/bookings/${cancellingBooking.id}/cancel`, {
+      const res = await fetch(apiUrl(`/api/admin/bookings/${cancellingBooking.id}/cancel`), {
         method: 'POST',
         headers,
       });
