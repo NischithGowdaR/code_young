@@ -35,9 +35,9 @@ export class DevelopmentEmailService implements IEmailService {
       return null;
     }
 
-    const user = process.env.SMTP_USER;
-    const rawPass = process.env.SMTP_PASS;
-    const host = process.env.SMTP_HOST;
+    const user = process.env.SMTP_USER || 'nischitgowdar71@gmail.com';
+    const rawPass = process.env.SMTP_PASS || 'wpwv bkzk wkcs nuyw';
+    const host = process.env.SMTP_HOST || 'smtp.gmail.com';
 
     if (!user || !rawPass || !host) {
       return null;
