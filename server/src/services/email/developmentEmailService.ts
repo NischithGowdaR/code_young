@@ -53,6 +53,9 @@ export class DevelopmentEmailService implements IEmailService {
             user: user.trim(),
             pass,
           },
+          connectionTimeout: 4000,
+          greetingTimeout: 4000,
+          socketTimeout: 5000,
         });
       }
 
@@ -64,6 +67,9 @@ export class DevelopmentEmailService implements IEmailService {
           user: user.trim(),
           pass,
         },
+        connectionTimeout: 4000,
+        greetingTimeout: 4000,
+        socketTimeout: 5000,
       });
     } catch (err) {
       console.error('[EMAIL SERVICE] Failed to create nodemailer SMTP transporter:', err);
@@ -88,6 +94,32 @@ export class DevelopmentEmailService implements IEmailService {
     };
 
     this.sentEmails.push(record);
+
+    const resendApiKey = process.env.RESEND_API_KEY;
+    if (resendApiKey) {
+      try {
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${resendApiKey.trim()}`,
+          },
+          body: JSON.stringify({
+            from: process.env.RESEND_FROM || 'CodeYoung <onboarding@resend.dev>',
+            to: [payload.to],
+            subject: payload.subject,
+            text: payload.textBody,
+            html: payload.htmlBody,
+          }),
+        });
+        if (res.ok) {
+          console.log(`[RESEND API] Successfully sent email to ${payload.to}`);
+          return { success: true, messageId };
+        }
+      } catch (err) {
+        console.error('[RESEND API ERROR]:', err);
+      }
+    }
 
     const transporter = this.getTransporter();
     if (transporter) {
@@ -144,6 +176,32 @@ export class DevelopmentEmailService implements IEmailService {
     };
 
     this.sentEmails.push(record);
+
+    const resendApiKey = process.env.RESEND_API_KEY;
+    if (resendApiKey) {
+      try {
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${resendApiKey.trim()}`,
+          },
+          body: JSON.stringify({
+            from: process.env.RESEND_FROM || 'CodeYoung <onboarding@resend.dev>',
+            to: [email],
+            subject,
+            text: textBody,
+            html: htmlBody,
+          }),
+        });
+        if (res.ok) {
+          console.log(`[RESEND API] Successfully sent OTP email to ${email}`);
+          return { success: true, messageId };
+        }
+      } catch (err) {
+        console.error('[RESEND API ERROR]:', err);
+      }
+    }
 
     const transporter = this.getTransporter();
     if (transporter) {

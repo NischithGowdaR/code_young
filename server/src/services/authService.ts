@@ -91,11 +91,10 @@ export const sendRegistrationOtp = async (data: SendRegistrationOtpInput) => {
 
   if (result.rawCode) {
     const emailService = getEmailService();
-    try {
-      await emailService.sendOtpEmail(normalizedEmail, data.name || 'Parent', result.rawCode);
-    } catch (err) {
+    // Non-blocking dispatch so the client transitions to the OTP screen immediately (<100ms)
+    emailService.sendOtpEmail(normalizedEmail, data.name || 'Parent', result.rawCode).catch((err) => {
       console.error('[EMAIL OTP DISPATCH ERROR]:', err);
-    }
+    });
   }
 
   return {
