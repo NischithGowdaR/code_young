@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { apiUrl } from '../config/api.js';
 
 export interface User {
   id: string;
@@ -46,40 +47,123 @@ interface AuthContextType {
   clearError: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const STORAGE_ACCESS_TOKEN_KEY = 'cy_access_token';
+const STORAGE_REFRESH_TOKEN_KEY = 'cy_refresh_token';
+const STORAGE_USER_KEY = 'cy_auth_user';
 
-import { apiUrl } from '../config/api.js';
+const getInitialUser = (): User | null => {
+  try {
+    const raw = localStorage.getItem(STORAGE_USER_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const getInitialToken = (): string | null => {
+  try {
+    return localStorage.getItem(STORAGE_ACCESS_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+};
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const API_BASE = apiUrl('/api/auth');
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [user, setUser] = useState<User | null>(getInitialUser);
+  const [accessToken, setAccessToken] = useState<string | null>(getInitialToken);
+  const [isLoading, setIsLoading] = useState<boolean>(!getInitialToken());
   const [error, setError] = useState<string | null>(null);
 
-  // Bootstrap initial auth using HTTP-only cookie refresh
+  const persistSession = (u: User | null, token: string | null, rToken?: string | null) => {
+    setUser(u);
+    setAccessToken(token);
+    try {
+      if (u && token) {
+        localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(u));
+        localStorage.setItem(STORAGE_ACCESS_TOKEN_KEY, token);
+        if (rToken) {
+          localStorage.setItem(STORAGE_REFRESH_TOKEN_KEY, rToken);
+        }
+      } else {
+        localStorage.removeItem(STORAGE_USER_KEY);
+        localStorage.removeItem(STORAGE_ACCESS_TOKEN_KEY);
+        localStorage.removeItem(STORAGE_REFRESH_TOKEN_KEY);
+      }
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  // Bootstrap initial auth using cached token / /me check / HTTP-only cookie refresh
   useEffect(() => {
+    let isMounted = true;
+
     const bootstrapAuth = async () => {
+      const cachedToken = localStorage.getItem(STORAGE_ACCESS_TOKEN_KEY);
+      const cachedRefreshToken = localStorage.getItem(STORAGE_REFRESH_TOKEN_KEY);
+
+      // If we have an existing access token, verify with /me first
+      if (cachedToken) {
+        try {
+          const meRes = await fetch(`${API_BASE}/me`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${cachedToken}`,
+            },
+            credentials: 'include',
+          });
+
+          if (meRes.ok) {
+            const meData = await meRes.json();
+            if (isMounted && meData.user) {
+              persistSession(meData.user, cachedToken, cachedRefreshToken);
+              setIsLoading(false);
+              return;
+            }
+          }
+        } catch {
+          // If /me network failure, we still keep local session to avoid sudden logout
+        }
+      }
+
+      // Try refreshing session with cookie / refresh token
       try {
         const res = await fetch(`${API_BASE}/refresh`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ refreshToken: cachedRefreshToken || undefined }),
         });
 
         if (res.ok) {
           const data = await res.json();
-          setUser(data.user);
-          setAccessToken(data.accessToken);
+          if (isMounted) {
+            persistSession(data.user, data.accessToken, data.refreshToken || cachedRefreshToken);
+          }
+        } else if (res.status === 401 && !cachedToken) {
+          if (isMounted) {
+            persistSession(null, null, null);
+          }
         }
       } catch {
         // Not logged in or refresh token invalid/expired
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     bootstrapAuth();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const safeParseJson = async (res: Response) => {
@@ -92,7 +176,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
           return JSON.parse(text);
         } catch {
-          // If JSON parse fails, check if res.json is mock-defined
           if (typeof res.json === 'function') {
             try {
               return await res.json();
@@ -124,6 +207,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const res = await fetch(`${API_BASE}/send-registration-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, name }),
       });
 
@@ -149,6 +233,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const res = await fetch(`${API_BASE}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, password }),
       });
 
@@ -157,8 +242,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         throw new Error(data.message || 'Failed to login');
       }
 
-      setUser(data.user);
-      setAccessToken(data.accessToken);
+      persistSession(data.user, data.accessToken, data.refreshToken);
       return data.user as User;
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Login failed';
@@ -183,6 +267,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const res = await fetch(`${API_BASE}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ name, email, password, phoneNumber, timezone, otpCode }),
       });
 
@@ -191,8 +276,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         throw new Error(data.message || 'Failed to register');
       }
 
-      setUser(data.user);
-      setAccessToken(data.accessToken);
+      persistSession(data.user, data.accessToken, data.refreshToken);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Registration failed';
       setError(msg);
@@ -209,6 +293,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const res = await fetch(`${API_BASE}/forgot-password/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email }),
       });
 
@@ -240,6 +325,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const res = await fetch(`${API_BASE}/forgot-password/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, otpCode }),
       });
 
@@ -272,6 +358,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const res = await fetch(`${API_BASE}/forgot-password/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, resetToken, newPassword, confirmPassword }),
       });
 
@@ -282,11 +369,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         throw new Error(errorMsg);
       }
 
-      if (data.user) {
-        setUser(data.user);
-      }
-      if (data.accessToken) {
-        setAccessToken(data.accessToken);
+      if (data.user && data.accessToken) {
+        persistSession(data.user, data.accessToken, data.refreshToken);
       }
 
       return data;
@@ -302,14 +386,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = async () => {
     setIsLoading(true);
     try {
+      const rToken = localStorage.getItem(STORAGE_REFRESH_TOKEN_KEY);
       await fetch(`${API_BASE}/logout`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ refreshToken: rToken || undefined }),
       });
     } catch {
       // Ignore errors on logout
     } finally {
-      setUser(null);
-      setAccessToken(null);
+      persistSession(null, null, null);
       setIsLoading(false);
     }
   };
@@ -345,3 +432,4 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+

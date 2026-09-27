@@ -46,9 +46,10 @@ export const AdminBookingsPage: React.FC = () => {
     setError(null);
     try {
       const headers: Record<string, string> = {};
-      if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+      const token = accessToken || localStorage.getItem('cy_access_token');
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const res = await fetch(apiUrl('/api/admin/bookings'), { headers });
+      const res = await fetch(apiUrl('/api/admin/bookings'), { headers, credentials: 'include' });
       const data = await res.json();
 
       if (!res.ok) {
@@ -75,11 +76,13 @@ export const AdminBookingsPage: React.FC = () => {
 
     try {
       const headers: Record<string, string> = {};
-      if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+      const token = accessToken || localStorage.getItem('cy_access_token');
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
       const res = await fetch(apiUrl(`/api/admin/bookings/${cancellingBooking.id}/cancel`), {
         method: 'POST',
         headers,
+        credentials: 'include',
       });
 
       const data = await res.json();

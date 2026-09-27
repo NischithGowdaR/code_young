@@ -97,6 +97,7 @@ authRouter.post(
       res.status(201).json({
         user,
         accessToken,
+        refreshToken,
       });
     } catch (err) {
       next(err);
@@ -125,6 +126,7 @@ authRouter.post(
       res.status(200).json({
         user,
         accessToken,
+        refreshToken,
       });
     } catch (err) {
       next(err);
@@ -137,11 +139,11 @@ authRouter.post(
   '/refresh',
   async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
-      const refreshToken = req.cookies[COOKIE_NAME];
+      const refreshToken = req.cookies[COOKIE_NAME] || req.body?.refreshToken;
       if (!refreshToken) {
         res.status(401).json({
           error: 'Unauthorized',
-          message: 'Refresh token cookie missing',
+          message: 'Refresh token missing',
         });
         return;
       }
@@ -156,6 +158,7 @@ authRouter.post(
       res.status(200).json({
         user,
         accessToken,
+        refreshToken: newRefreshToken,
       });
     } catch (err) {
       clearRefreshTokenCookie(res);
@@ -169,7 +172,7 @@ authRouter.post(
   '/logout',
   async (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
-      const refreshToken = req.cookies[COOKIE_NAME];
+      const refreshToken = req.cookies[COOKIE_NAME] || req.body?.refreshToken;
       if (refreshToken) {
         await revokeRefreshToken(refreshToken);
       }

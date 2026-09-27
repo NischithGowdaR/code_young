@@ -43,28 +43,33 @@ parentRouter.get(
         // fallback
       }
 
-      // Fetch bookings from Prisma DB
+      // Fetch bookings from Prisma DB for this parent
+      const emailToMatch = req.user.email.toLowerCase();
       let dbBookings: BookingRecord[] = [];
       try {
         dbBookings = (await prisma.booking.findMany({
-          where: { parentId: userId },
+          where: {
+            OR: [
+              { parentId: userId },
+              { parent: { email: { equals: emailToMatch, mode: 'insensitive' } } },
+            ],
+          },
           include: { mentor: true },
-          orderBy: { startUtc: 'asc' },
+          orderBy: { createdAt: 'desc' },
         })) as unknown as BookingRecord[];
       } catch {
         // fallback
       }
 
       // Collect pending trial requests associated with parent email/phone
-      const emailToMatch = req.user.email.toLowerCase();
       const pendingList = Array.from(pendingTrialRequests.values()).filter(
-        (tr) => tr.parentEmail === emailToMatch
+        (tr) => tr.parentEmail.toLowerCase() === emailToMatch
       );
 
       const now = new Date();
 
       const upcomingBookings = [
-        ...dbBookings.filter((b) => new Date(b.startUtc) >= now),
+        ...dbBookings.filter((b) => new Date(b.startUtc) >= now && b.status !== 'CANCELLED'),
         ...pendingList.map((tr) => ({
           id: tr.id,
           course: tr.course,
@@ -79,10 +84,35 @@ parentRouter.get(
         })),
       ];
 
-      const previousBookings = dbBookings.filter((b) => new Date(b.startUtc) < now);
+      const previousBookings = dbBookings.filter(
+        (b) => new Date(b.startUtc) < now || b.status === 'CANCELLED'
+      );
 
-      const primaryCourse = pendingList[0]?.course || dbBookings[0]?.course || null;
-      const grade = pendingList[0]?.studentGrade || dbBookings[0]?.studentGrade || null;
+      // Determine latest active course and grade from the most recent booking or trial request
+      const latestBooking = dbBookings[0]; // already ordered by createdAt desc
+      const sortedPending = [...pendingList].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      const latestPending = sortedPending[0];
+
+      let primaryCourse: string | null = null;
+      let grade: string | null = null;
+
+      if (latestBooking && latestPending) {
+        if (new Date(latestBooking.createdAt).getTime() >= new Date(latestPending.createdAt).getTime()) {
+          primaryCourse = latestBooking.course;
+          grade = latestBooking.studentGrade;
+        } else {
+          primaryCourse = latestPending.course;
+          grade = latestPending.studentGrade;
+        }
+      } else if (latestBooking) {
+        primaryCourse = latestBooking.course;
+        grade = latestBooking.studentGrade;
+      } else if (latestPending) {
+        primaryCourse = latestPending.course;
+        grade = latestPending.studentGrade;
+      }
 
       res.status(200).json({
         user: {
@@ -124,16 +154,21 @@ parentRouter.get(
       let dbBookings: BookingRecord[] = [];
       try {
         dbBookings = (await prisma.booking.findMany({
-          where: { parentId: userId },
+          where: {
+            OR: [
+              { parentId: userId },
+              { parent: { email: { equals: emailToMatch, mode: 'insensitive' } } },
+            ],
+          },
           include: { mentor: true },
-          orderBy: { startUtc: 'desc' },
+          orderBy: { createdAt: 'desc' },
         })) as unknown as BookingRecord[];
       } catch {
         // fallback
       }
 
       const pendingList = Array.from(pendingTrialRequests.values()).filter(
-        (tr) => tr.parentEmail === emailToMatch
+        (tr) => tr.parentEmail.toLowerCase() === emailToMatch
       );
 
       res.status(200).json({

@@ -25,8 +25,18 @@ export const RegisterPage: React.FC = () => {
   const [otpSuccess, setOtpSuccess] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
 
-  const { sendRegistrationOtp, register, isLoading, error } = useAuth();
+  const { user, sendRegistrationOtp, register, isLoading, error } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user && !isLoading) {
+      if (user.role === 'ADMIN') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [user, isLoading, navigate]);
 
   // Countdown timer for resend OTP cooldown
   useEffect(() => {

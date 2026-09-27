@@ -62,11 +62,12 @@ export const AdminDashboardPage: React.FC = () => {
       setError(null);
       try {
         const headers: Record<string, string> = {};
-        if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+        const token = accessToken || localStorage.getItem('cy_access_token');
+        if (token) headers['Authorization'] = `Bearer ${token}`;
 
         const [resMentors, resBookings] = await Promise.all([
-          fetch(apiUrl('/api/admin/mentors'), { headers }),
-          fetch(apiUrl('/api/admin/bookings'), { headers }),
+          fetch(apiUrl('/api/admin/mentors'), { headers, credentials: 'include' }),
+          fetch(apiUrl('/api/admin/bookings'), { headers, credentials: 'include' }),
         ]);
 
         const dataMentors = await resMentors.json();

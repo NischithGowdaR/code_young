@@ -64,11 +64,15 @@ export const DashboardPage: React.FC = () => {
         const headers: Record<string, string> = {
           'Content-Type': 'application/json',
         };
-        if (accessToken) {
-          headers['Authorization'] = `Bearer ${accessToken}`;
+        const token = accessToken || localStorage.getItem('cy_access_token');
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
         }
 
-        const res = await fetch(apiUrl('/api/parent/dashboard'), { headers });
+        const res = await fetch(apiUrl('/api/parent/dashboard'), {
+          headers,
+          credentials: 'include',
+        });
         const result = await res.json();
 
         if (!res.ok) {

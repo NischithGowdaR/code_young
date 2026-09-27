@@ -164,8 +164,14 @@ export const BookTrialPage: React.FC = () => {
     setIsSendingOtp(true);
     setOtpError(null);
     try {
+      const headers: Record<string, string> = {};
+      const token = accessToken || localStorage.getItem('cy_access_token');
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const res = await fetch(apiUrl(`/api/trial-requests/${trialRequestId}/send-otp`), {
         method: 'POST',
+        headers,
+        credentials: 'include',
       });
       const data = await res.json();
       setOtpCode('');
@@ -185,8 +191,14 @@ export const BookTrialPage: React.FC = () => {
     setOtpError(null);
     setOtpSuccess(null);
     try {
+      const headers: Record<string, string> = {};
+      const token = accessToken || localStorage.getItem('cy_access_token');
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const res = await fetch(apiUrl(`/api/trial-requests/${trialSession.trialRequestId}/resend-otp`), {
         method: 'POST',
+        headers,
+        credentials: 'include',
       });
       const data = await res.json();
       if (!res.ok) {
@@ -209,11 +221,18 @@ export const BookTrialPage: React.FC = () => {
     try {
       const payload = {
         ...data,
-        studentSubject: 'General Curriculum',
+        studentSubject: 'Interactive Session',
       };
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      const token = accessToken || localStorage.getItem('cy_access_token');
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const res = await fetch(apiUrl('/api/trial-requests'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
+        credentials: 'include',
         body: JSON.stringify(payload),
       });
 
@@ -254,9 +273,16 @@ export const BookTrialPage: React.FC = () => {
     setOtpError(null);
 
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      const token = accessToken || localStorage.getItem('cy_access_token');
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const res = await fetch(apiUrl(`/api/trial-requests/${trialSession.trialRequestId}/verify-otp`), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
+        credentials: 'include',
         body: JSON.stringify({ code: otpCode.trim() }),
       });
 
@@ -295,7 +321,9 @@ export const BookTrialPage: React.FC = () => {
           timezone: selectedTimezone,
         });
 
-        const res = await fetch(apiUrl(`/api/availability?${params.toString()}`));
+        const res = await fetch(apiUrl(`/api/availability?${params.toString()}`), {
+          credentials: 'include',
+        });
         const data = await res.json();
 
         if (!res.ok) {
@@ -330,13 +358,15 @@ export const BookTrialPage: React.FC = () => {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
-      if (accessToken) {
-        headers['Authorization'] = `Bearer ${accessToken}`;
+      const token = accessToken || localStorage.getItem('cy_access_token');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
 
       const res = await fetch(apiUrl('/api/bookings'), {
         method: 'POST',
         headers,
+        credentials: 'include',
         body: JSON.stringify({
           trialRequestId: trialSession.trialRequestId,
           startUtc: selectedSlot.startUtc,

@@ -1,4 +1,4 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState, useEffect, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header.js';
 import { Footer } from '../components/Footer.js';
@@ -10,8 +10,18 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
 
-  const { login, isLoading, error } = useAuth();
+  const { user, login, isLoading, error } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user && !isLoading) {
+      if (user.role === 'ADMIN') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [user, isLoading, navigate]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

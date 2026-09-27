@@ -31,9 +31,10 @@ export const AdminMentorsPage: React.FC = () => {
     setError(null);
     try {
       const headers: Record<string, string> = {};
-      if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+      const token = accessToken || localStorage.getItem('cy_access_token');
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const res = await fetch(apiUrl('/api/admin/mentors'), { headers });
+      const res = await fetch(apiUrl('/api/admin/mentors'), { headers, credentials: 'include' });
       const data = await res.json();
 
       if (!res.ok) {
@@ -63,11 +64,13 @@ export const AdminMentorsPage: React.FC = () => {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
-      if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+      const token = accessToken || localStorage.getItem('cy_access_token');
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
       const res = await fetch(apiUrl(`/api/admin/mentors/${mentor.id}/status`), {
         method: 'PATCH',
         headers,
+        credentials: 'include',
         body: JSON.stringify({ active: newActiveState }),
       });
 

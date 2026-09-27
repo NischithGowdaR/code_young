@@ -477,4 +477,80 @@ describe('Auth & Legal Pages (Registration, Login, Forgot Password, Terms, Priva
       expect(screen.getByText('1 Total Requests')).toBeInTheDocument();
     });
   });
+
+  it('9. Session is preserved across simulated page reloads via localStorage', async () => {
+    // Set localStorage as if user had already logged in previously
+    localStorage.setItem(
+      'cy_auth_user',
+      JSON.stringify({
+        id: 'u-persistent',
+        name: 'Persistent Parent',
+        email: 'persistent@example.com',
+        role: 'PARENT',
+        timezone: 'Asia/Kolkata',
+      })
+    );
+    localStorage.setItem('cy_access_token', 'cached-access-token-123');
+
+    global.fetch = vi.fn().mockImplementation((url: string | URL | Request) => {
+      const u = String(url);
+      if (u.includes('/api/auth/me')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              user: {
+                id: 'u-persistent',
+                name: 'Persistent Parent',
+                email: 'persistent@example.com',
+                role: 'PARENT',
+                timezone: 'Asia/Kolkata',
+              },
+            }),
+        });
+      }
+      if (u.includes('/api/parent/dashboard')) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              user: {
+                id: 'u-persistent',
+                name: 'Persistent Parent',
+                email: 'persistent@example.com',
+                phoneNumber: null,
+                timezone: 'Asia/Kolkata',
+                role: 'PARENT',
+              },
+              studentSummary: {
+                totalTrialRequests: 0,
+                primaryCourse: null,
+                grade: null,
+              },
+              upcomingBookings: [],
+              previousBookings: [],
+            }),
+        });
+      }
+      return Promise.resolve({ ok: false, status: 400, json: () => Promise.resolve({}) });
+    });
+
+    render(
+      <MemoryRouter>
+        <AuthProvider>
+          <DashboardPage />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    // Should immediately render parent dashboard without redirecting to login
+    await waitFor(() => {
+      expect(screen.getAllByText('Persistent Parent').length).toBeGreaterThan(0);
+      expect(screen.getByText('persistent@example.com')).toBeInTheDocument();
+    });
+
+    localStorage.clear();
+  });
 });
