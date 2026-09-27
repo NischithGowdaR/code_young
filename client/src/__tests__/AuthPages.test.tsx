@@ -11,11 +11,12 @@ import { DashboardPage } from '../pages/DashboardPage.js';
 
 describe('Auth & Legal Pages (Registration, Login, Forgot Password, Terms, Privacy)', () => {
   beforeEach(() => {
+    localStorage.clear();
     cleanup();
     vi.clearAllMocks();
   });
 
-  it('1. Registration form validation and error handling', async () => {
+  it('1. Registration form validation and error handling with strong password rules', async () => {
     global.fetch = vi.fn().mockImplementation((url: string | URL | Request) => {
       const u = String(url);
       if (u.includes('/api/auth/refresh')) {
@@ -36,7 +37,8 @@ describe('Auth & Legal Pages (Registration, Login, Forgot Password, Terms, Priva
       expect(screen.getByRole('heading', { name: /Parent Registration/i })).toBeInTheDocument();
       expect(screen.getByLabelText(/Full Name \*/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Email Address \*/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/Password \(min 6 chars\) \*/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Password \(min 8 chars\) \*/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Confirm Password \*/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Primary Timezone \*/i)).toBeInTheDocument();
     });
 
@@ -45,7 +47,10 @@ describe('Auth & Legal Pages (Registration, Login, Forgot Password, Terms, Priva
     fireEvent.change(screen.getByLabelText(/Email Address \*/i), {
       target: { value: 'jane@example.com' },
     });
-    fireEvent.change(screen.getByLabelText(/Password \(min 6 chars\) \*/i), {
+    fireEvent.change(screen.getByLabelText(/Password \(min 8 chars\) \*/i), {
+      target: { value: '123' },
+    });
+    fireEvent.change(screen.getByLabelText(/Confirm Password \*/i), {
       target: { value: '123' },
     });
 
@@ -53,7 +58,37 @@ describe('Auth & Legal Pages (Registration, Login, Forgot Password, Terms, Priva
     fireEvent.submit(submitBtn.closest('form')!);
 
     await waitFor(() => {
-      expect(screen.getByText(/Password must be at least 6 characters long/i)).toBeInTheDocument();
+      expect(screen.getByText(/Password must be at least 8 characters long/i)).toBeInTheDocument();
+    });
+
+    // Fill password missing special character / number / uppercase / lowercase
+    fireEvent.change(screen.getByLabelText(/Password \(min 8 chars\) \*/i), {
+      target: { value: 'passwordlong' },
+    });
+    fireEvent.change(screen.getByLabelText(/Confirm Password \*/i), {
+      target: { value: 'passwordlong' },
+    });
+    fireEvent.submit(submitBtn.closest('form')!);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character/i
+        )
+      ).toBeInTheDocument();
+    });
+
+    // Passwords mismatch
+    fireEvent.change(screen.getByLabelText(/Password \(min 8 chars\) \*/i), {
+      target: { value: 'StrongPass123!' },
+    });
+    fireEvent.change(screen.getByLabelText(/Confirm Password \*/i), {
+      target: { value: 'DifferentPass123!' },
+    });
+    fireEvent.submit(submitBtn.closest('form')!);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Passwords do not match/i)).toBeInTheDocument();
     });
   });
 
@@ -114,8 +149,11 @@ describe('Auth & Legal Pages (Registration, Login, Forgot Password, Terms, Priva
     fireEvent.change(screen.getByLabelText(/Email Address \*/i), {
       target: { value: 'jane@example.com' },
     });
-    fireEvent.change(screen.getByLabelText(/Password \(min 6 chars\) \*/i), {
-      target: { value: 'password123' },
+    fireEvent.change(screen.getByLabelText(/Password \(min 8 chars\) \*/i), {
+      target: { value: 'StrongPass123!' },
+    });
+    fireEvent.change(screen.getByLabelText(/Confirm Password \*/i), {
+      target: { value: 'StrongPass123!' },
     });
 
     const sendOtpBtn = screen.getByRole('button', { name: /Continue & Verify Email/i });
@@ -310,18 +348,50 @@ describe('Auth & Legal Pages (Registration, Login, Forgot Password, Terms, Priva
     // Step 3: Create New Password
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /Create New Password/i })).toBeInTheDocument();
-      expect(screen.getByLabelText(/^New Password$/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^New Password/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Confirm New Password/i)).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByLabelText(/^New Password$/i), {
+    const resetBtn = screen.getByRole('button', { name: /Reset Password/i });
+
+    // Test short password in reset step
+    fireEvent.change(screen.getByLabelText(/^New Password/i), {
+      target: { value: 'short' },
+    });
+    fireEvent.change(screen.getByLabelText(/Confirm New Password/i), {
+      target: { value: 'short' },
+    });
+    fireEvent.submit(resetBtn.closest('form')!);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Password must be at least 8 characters long/i)).toBeInTheDocument();
+    });
+
+    // Test password missing rules (e.g. no numbers or uppercase)
+    fireEvent.change(screen.getByLabelText(/^New Password/i), {
+      target: { value: 'alllowercasenonumber' },
+    });
+    fireEvent.change(screen.getByLabelText(/Confirm New Password/i), {
+      target: { value: 'alllowercasenonumber' },
+    });
+    fireEvent.submit(resetBtn.closest('form')!);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          /Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character/i
+        )
+      ).toBeInTheDocument();
+    });
+
+    // Test valid password reset
+    fireEvent.change(screen.getByLabelText(/^New Password/i), {
       target: { value: 'NewSecurePass123!' },
     });
     fireEvent.change(screen.getByLabelText(/Confirm New Password/i), {
       target: { value: 'NewSecurePass123!' },
     });
 
-    const resetBtn = screen.getByRole('button', { name: /Reset Password/i });
     fireEvent.submit(resetBtn.closest('form')!);
 
     // Step 4: Success state

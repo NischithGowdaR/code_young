@@ -77,92 +77,69 @@ export const HeroSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Column: Original SVG Graphic Illustration */}
-          <div className="lg:col-span-5 flex justify-center">
-            <div className="relative w-full max-w-md aspect-square bg-gradient-to-tr from-indigo-600 via-violet-600 to-purple-700 rounded-3xl p-6 shadow-2xl overflow-hidden flex flex-col justify-between border border-white/20">
-              {/* Decorative Geometric Patterns */}
-              <div className="absolute -right-12 -top-12 w-40 h-40 bg-white/10 rounded-full blur-xl" />
-              <div className="absolute -left-12 -bottom-12 w-48 h-48 bg-amber-400/20 rounded-full blur-2xl" />
+          {/* Right Column: Large Seamless Student Visual with Subtle Innovative Accents */}
+          <div className="lg:col-span-5 flex justify-center lg:justify-end relative mt-4 lg:mt-0">
+            {/* Soft Ambient Radial Halo */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 sm:w-80 sm:h-80 lg:w-[480px] lg:h-[480px] bg-gradient-to-tr from-indigo-200/50 via-violet-200/40 to-amber-200/40 rounded-full blur-3xl pointer-events-none" />
 
-              {/* Code Snippet Box */}
-              <div className="bg-slate-900/95 backdrop-blur-md rounded-xl p-4 shadow-lg border border-white/10 font-mono text-xs text-indigo-300 space-y-1.5 z-10">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                  <span className="text-slate-500 text-[10px] ml-auto">
-                    CodeYoung Interactive Lab
+            <div className="relative w-full max-w-sm sm:max-w-md lg:max-w-xl flex items-end justify-center">
+              {/* Large Seamless Student Image without enclosing border/box */}
+              <img
+                src="/images/hero/hero_student_cutout.png"
+                alt="Codeyoung Student"
+                className="w-full max-h-[340px] sm:max-h-[460px] lg:max-h-[580px] object-contain object-bottom relative z-10 drop-shadow-xl hover:scale-[1.02] transition-transform duration-500 ease-out"
+                loading="eager"
+              />
+
+              {/* Top Compact Floating Badge: Live Coding Lab */}
+              <div className="absolute top-2 sm:top-4 left-0 sm:left-2 bg-slate-900/90 backdrop-blur-md rounded-xl py-1.5 px-2.5 sm:px-3 shadow-lg border border-white/15 text-white font-mono text-[9px] sm:text-[10px] space-y-0.5 z-20 hidden xs:block sm:block">
+                <div className="flex items-center gap-1 mb-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  <span className="text-slate-400 text-[8px] sm:text-[9px] font-sans font-medium ml-1">
+                    Live Coding Lab
                   </span>
                 </div>
                 <div>
-                  <span className="text-pink-400">const</span>{' '}
-                  <span className="text-amber-300">futureLeader</span> ={' '}
-                  <span className="text-sky-300">new</span> Student();
+                  <span className="text-pink-400">const</span> future = <span className="text-sky-300">new</span> Codeyoung();
+                </div>
+              </div>
+
+              {/* Bottom Compact Floating Badge: 1:1 Live Trial Class */}
+              <div className="absolute bottom-2 sm:bottom-6 right-0 sm:right-2 bg-white/95 backdrop-blur-md rounded-xl py-1 px-2.5 sm:py-1.5 sm:px-3 shadow-lg border border-slate-100/90 flex items-center gap-2 z-20 max-w-[90%]">
+                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-emerald-500 text-white flex items-center justify-center shadow-xs shrink-0">
+                  <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 font-bold" />
                 </div>
                 <div>
-                  <span className="text-indigo-400">futureLeader</span>.
-                  <span className="text-emerald-300">learn</span>(['Coding', 'Math', 'Science']);
-                </div>
-                <div className="text-emerald-400 font-bold flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                  <span>// Status: Ready to Launch!</span>
-                </div>
-              </div>
-
-              {/* Subject Badges */}
-              <div className="grid grid-cols-2 gap-3 z-10 my-4">
-                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 text-white flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-500/40 flex items-center justify-center">
-                    <Code2 className="w-5 h-5 text-indigo-200" />
+                  <div className="text-[10px] sm:text-[11px] font-bold text-slate-900 leading-tight">
+                    Live 1:1 Trial Class
                   </div>
-                  <div>
-                    <div className="text-xs font-bold">Coding</div>
-                    <div className="text-[10px] text-white/80">Python & AI</div>
-                  </div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 text-white flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-amber-500/40 flex items-center justify-center">
-                    <Calculator className="w-5 h-5 text-amber-200" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold">STEM Math</div>
-                    <div className="text-[10px] text-white/80">Mental & Logic</div>
-                  </div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 text-white flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/40 flex items-center justify-center">
-                    <FlaskConical className="w-5 h-5 text-emerald-200" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold">Science</div>
-                    <div className="text-[10px] text-white/80">Hands-on Labs</div>
-                  </div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 text-white flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-violet-500/40 flex items-center justify-center">
-                    <MessageSquare className="w-5 h-5 text-violet-200" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold">English</div>
-                    <div className="text-[10px] text-white/80">Public Speaking</div>
+                  <div className="text-[8px] sm:text-[9px] font-semibold text-emerald-600 flex items-center gap-0.5">
+                    <Sparkles className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
+                    <span>Free Session &bull; Certified Mentor</span>
                   </div>
                 </div>
               </div>
 
-              {/* Floating Achievement Banner */}
-              <div className="bg-white text-slate-900 rounded-xl p-3 shadow-lg flex items-center justify-between z-10">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
-                    <Check className="w-4 h-4 font-bold" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold">1-on-1 Free Class</div>
-                    <div className="text-[10px] text-slate-500">Live mentor feedback</div>
-                  </div>
+              {/* Side Floating Subject Accents */}
+              <div className="absolute top-1/3 -right-2 sm:right-0 bg-white/90 backdrop-blur-md rounded-xl p-1 sm:p-1.5 shadow-md border border-slate-100 hidden lg:flex flex-col gap-1 z-20">
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 text-[9px] font-bold">
+                  <Code2 className="w-2.5 h-2.5" />
+                  <span>Coding</span>
                 </div>
-                <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">
-                  FREE
-                </span>
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 text-amber-700 text-[9px] font-bold">
+                  <Calculator className="w-2.5 h-2.5" />
+                  <span>Math</span>
+                </div>
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 text-[9px] font-bold">
+                  <FlaskConical className="w-2.5 h-2.5" />
+                  <span>Science</span>
+                </div>
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-violet-50 text-violet-700 text-[9px] font-bold">
+                  <MessageSquare className="w-2.5 h-2.5" />
+                  <span>English</span>
+                </div>
               </div>
             </div>
           </div>

@@ -36,6 +36,35 @@ export const Navbar: React.FC = () => {
 
         {/* Courses Dropdown */}
         <CourseDropdown />
+
+        <a
+          href="/#about"
+          className="px-3 py-2 text-sm font-medium rounded-lg transition-colors text-slate-700 hover:text-indigo-600 hover:bg-slate-50"
+        >
+          About Us
+        </a>
+
+        <Link
+          to="/blog"
+          className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+            location.pathname === '/blog'
+              ? 'text-indigo-600 bg-indigo-50 font-semibold'
+              : 'text-slate-700 hover:text-indigo-600 hover:bg-slate-50'
+          }`}
+        >
+          Blog
+        </Link>
+
+        <Link
+          to="/contact"
+          className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+            location.pathname === '/contact'
+              ? 'text-indigo-600 bg-indigo-50 font-semibold'
+              : 'text-slate-700 hover:text-indigo-600 hover:bg-slate-50'
+          }`}
+        >
+          Contact
+        </Link>
       </div>
 
       {/* Action Buttons */}

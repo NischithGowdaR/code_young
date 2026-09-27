@@ -3,7 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header.js';
 import { Footer } from '../components/Footer.js';
 import { useAuth } from '../context/AuthContext.js';
-import { UserPlus, Mail, CheckCircle2, AlertCircle } from 'lucide-react';
+import { UserPlus, Mail, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { PasswordRequirementsList } from '../components/PasswordRequirementsList.js';
+import {
+  isPasswordStrong,
+  getPasswordValidationError,
+} from '../utils/passwordValidator.js';
 
 const TIMEZONES = [
   { value: 'America/New_York', label: 'US - Eastern Time (America/New_York)' },
@@ -18,6 +23,9 @@ export const RegisterPage: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [timezone, setTimezone] = useState('America/New_York');
   const [otpCode, setOtpCode] = useState('');
@@ -52,22 +60,23 @@ export const RegisterPage: React.FC = () => {
     setFormError(null);
     setOtpSuccess(null);
 
-    if (!name || !email || !password) {
+    if (!name.trim() || !email.trim() || !password || !confirmPassword) {
       setFormError('Please fill in all required fields.');
       return;
     }
 
-    if (password.length < 6) {
-      setFormError('Password must be at least 6 characters long.');
+    const passwordError = getPasswordValidationError(password, confirmPassword);
+    if (passwordError) {
+      setFormError(passwordError);
       return;
     }
 
     try {
-      const result = await sendRegistrationOtp(email, name);
+      const result = await sendRegistrationOtp(email.trim().toLowerCase(), name.trim());
       setStep('OTP');
       setOtpCode('');
       setCooldown(result.cooldownSeconds || 60);
-      setOtpSuccess(`A 6-digit verification code has been sent to ${email}. Please check your email inbox.`);
+      setOtpSuccess(`A 6-digit verification code has been sent to ${email.trim()}. Please check your email inbox.`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to send verification code.';
       setFormError(msg);
@@ -80,10 +89,10 @@ export const RegisterPage: React.FC = () => {
     setOtpSuccess(null);
 
     try {
-      const result = await sendRegistrationOtp(email, name);
+      const result = await sendRegistrationOtp(email.trim().toLowerCase(), name.trim());
       setCooldown(result.cooldownSeconds || 60);
       setOtpCode('');
-      setOtpSuccess(`A new verification code has been sent to ${email}. Please check your email inbox.`);
+      setOtpSuccess(`A new verification code has been sent to ${email.trim()}. Please check your email inbox.`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to resend code.';
       setFormError(msg);
@@ -100,7 +109,15 @@ export const RegisterPage: React.FC = () => {
     }
 
     try {
-      await register(name, email, password, phoneNumber || undefined, timezone, otpCode.trim());
+      await register(
+        name.trim(),
+        email.trim().toLowerCase(),
+        password,
+        phoneNumber.trim() || undefined,
+        timezone,
+        otpCode.trim(),
+        confirmPassword
+      );
       navigate('/dashboard', { replace: true });
     } catch (err) {
       const msg =
@@ -108,6 +125,12 @@ export const RegisterPage: React.FC = () => {
       setFormError(msg);
     }
   };
+
+  const isFormValid =
+    name.trim().length >= 2 &&
+    email.trim().length > 0 &&
+    isPasswordStrong(password) &&
+    password === confirmPassword;
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 font-sans antialiased">
@@ -180,18 +203,75 @@ export const RegisterPage: React.FC = () => {
                   htmlFor="password"
                   className="block text-xs font-semibold text-slate-700 mb-1"
                 >
-                  Password (min 6 chars) *
+                  Password (min 8 chars) *
                 </label>
-                <input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                />
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full px-3.5 pr-10 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                  <button
+                    type="button"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 focus:outline-none"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
               </div>
+
+              <div>
+                <label
+                  htmlFor="confirm-password"
+                  className="block text-xs font-semibold text-slate-700 mb-1"
+                >
+                  Confirm Password *
+                </label>
+                <div className="relative">
+                  <input
+                    id="confirm-password"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full px-3.5 pr-10 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                  <button
+                    type="button"
+                    aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 focus:outline-none"
+                    tabIndex={-1}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Password Requirements Checklist */}
+              {(password.length > 0 || confirmPassword.length > 0) && (
+                <PasswordRequirementsList
+                  password={password}
+                  confirmPassword={confirmPassword}
+                  showConfirmRule={true}
+                />
+              )}
 
               <div>
                 <label
@@ -233,8 +313,8 @@ export const RegisterPage: React.FC = () => {
 
               <button
                 type="submit"
-                disabled={isLoading}
-                className="w-full py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold text-sm rounded-xl shadow-md hover:brightness-105 active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                disabled={isLoading || !isFormValid}
+                className="w-full py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold text-sm rounded-xl shadow-md hover:brightness-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <>

@@ -14,8 +14,12 @@ import {
   Eye,
   EyeOff,
   ShieldCheck,
-  Check,
 } from 'lucide-react';
+import { PasswordRequirementsList } from '../components/PasswordRequirementsList.js';
+import {
+  isPasswordStrong,
+  getPasswordValidationError,
+} from '../utils/passwordValidator.js';
 
 type Step = 'EMAIL' | 'OTP' | 'RESET' | 'SUCCESS';
 
@@ -140,13 +144,9 @@ export const ForgotPasswordPage: React.FC = () => {
     e.preventDefault();
     setFormError(null);
 
-    if (newPassword.length < 6) {
-      setFormError('Password must be at least 6 characters long.');
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setFormError('New Password and Confirm Password do not match.');
+    const passwordError = getPasswordValidationError(newPassword, confirmPassword);
+    if (passwordError) {
+      setFormError(passwordError);
       return;
     }
 
@@ -408,7 +408,7 @@ export const ForgotPasswordPage: React.FC = () => {
                     htmlFor="new-password"
                     className="block text-xs font-semibold text-slate-700 mb-1"
                   >
-                    New Password
+                    New Password (min 8 chars)
                   </label>
                   <div className="relative">
                     <input
@@ -423,8 +423,9 @@ export const ForgotPasswordPage: React.FC = () => {
                     />
                     <button
                       type="button"
+                      aria-label={showNewPassword ? 'Hide password' : 'Show password'}
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                      className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 focus:outline-none"
                       tabIndex={-1}
                     >
                       {showNewPassword ? (
@@ -456,8 +457,9 @@ export const ForgotPasswordPage: React.FC = () => {
                     />
                     <button
                       type="button"
+                      aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                      className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 focus:outline-none"
                       tabIndex={-1}
                     >
                       {showConfirmPassword ? (
@@ -469,42 +471,23 @@ export const ForgotPasswordPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Password validation indicators */}
-                <div className="p-3 bg-slate-50 rounded-xl space-y-1.5 text-xs text-slate-600">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[10px] ${
-                        newPassword.length >= 6
-                          ? 'bg-emerald-500 text-white'
-                          : 'bg-slate-200 text-slate-400'
-                      }`}
-                    >
-                      <Check className="w-2.5 h-2.5" />
-                    </span>
-                    <span>At least 6 characters</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[10px] ${
-                        newPassword && newPassword === confirmPassword
-                          ? 'bg-emerald-500 text-white'
-                          : 'bg-slate-200 text-slate-400'
-                      }`}
-                    >
-                      <Check className="w-2.5 h-2.5" />
-                    </span>
-                    <span>Passwords match</span>
-                  </div>
-                </div>
+                {/* Password validation requirements */}
+                {(newPassword.length > 0 || confirmPassword.length > 0) && (
+                  <PasswordRequirementsList
+                    password={newPassword}
+                    confirmPassword={confirmPassword}
+                    showConfirmRule={true}
+                  />
+                )}
 
                 <button
                   type="submit"
                   disabled={
                     isSubmitting ||
-                    newPassword.length < 6 ||
+                    !isPasswordStrong(newPassword) ||
                     newPassword !== confirmPassword
                   }
-                  className="w-full py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold text-sm rounded-xl shadow-md hover:brightness-105 active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold text-sm rounded-xl shadow-md hover:brightness-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
                     <>

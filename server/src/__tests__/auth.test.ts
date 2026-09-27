@@ -187,6 +187,57 @@ describe('Authentication & Authorization API', () => {
     expect(hasRefreshCookie).toBe(true);
   });
 
+  it('1b. Registration: should enforce strong password complexity rules', async () => {
+    // Too short (< 8 characters)
+    const shortRes = await request(app).post('/api/auth/register').send({
+      ...testUser,
+      password: 'Pass1!',
+    });
+    expect(shortRes.status).toBe(400);
+    expect(shortRes.body.message).toContain('at least 8 characters');
+
+    // Missing lowercase letter
+    const noLowerRes = await request(app).post('/api/auth/register').send({
+      ...testUser,
+      password: 'PASSWORD123!',
+    });
+    expect(noLowerRes.status).toBe(400);
+    expect(noLowerRes.body.message).toContain('lowercase');
+
+    // Missing uppercase letter
+    const noUpperRes = await request(app).post('/api/auth/register').send({
+      ...testUser,
+      password: 'password123!',
+    });
+    expect(noUpperRes.status).toBe(400);
+    expect(noUpperRes.body.message).toContain('uppercase');
+
+    // Missing digit/number
+    const noNumberRes = await request(app).post('/api/auth/register').send({
+      ...testUser,
+      password: 'Password!',
+    });
+    expect(noNumberRes.status).toBe(400);
+    expect(noNumberRes.body.message).toContain('number');
+
+    // Missing special character
+    const noSpecialRes = await request(app).post('/api/auth/register').send({
+      ...testUser,
+      password: 'Password123',
+    });
+    expect(noSpecialRes.status).toBe(400);
+    expect(noSpecialRes.body.message).toContain('special character');
+
+    // Mismatched confirmPassword when provided
+    const mismatchRes = await request(app).post('/api/auth/register').send({
+      ...testUser,
+      password: 'Password123!',
+      confirmPassword: 'MismatchPassword123!',
+    });
+    expect(mismatchRes.status).toBe(400);
+    expect(mismatchRes.body.message).toContain('Passwords do not match');
+  });
+
   it('2. Duplicate email: should reject registration if email is already registered', async () => {
     await request(app).post('/api/auth/register').send(testUser);
 
@@ -370,7 +421,17 @@ describe('Authentication & Authorization API', () => {
 
       const resetToken = verifyRes.body.resetToken;
 
-      // 13a. Reject mismatched password
+      // 13a. Reject weak newPassword
+      const weakRes = await request(app).post('/api/auth/forgot-password/reset-password').send({
+        email: testUser.email,
+        resetToken,
+        newPassword: 'weak',
+        confirmPassword: 'weak',
+      });
+      expect(weakRes.status).toBe(400);
+      expect(weakRes.body.message).toContain('at least 8 characters');
+
+      // 13b. Reject mismatched password
       const mismatchRes = await request(app).post('/api/auth/forgot-password/reset-password').send({
         email: testUser.email,
         resetToken,
@@ -379,7 +440,7 @@ describe('Authentication & Authorization API', () => {
       });
       expect(mismatchRes.status).toBe(400);
 
-      // 13b. Successful reset
+      // 13c. Successful reset
       const newPassword = 'BrandNewPassword123!';
       const resetRes = await request(app).post('/api/auth/forgot-password/reset-password').send({
         email: testUser.email,

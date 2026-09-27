@@ -11,6 +11,8 @@ import { EnglishPage } from './pages/EnglishPage.js';
 import { SciencePage } from './pages/SciencePage.js';
 import { TermsPage } from './pages/TermsPage.js';
 import { PrivacyPage } from './pages/PrivacyPage.js';
+import { ContactPage } from './pages/ContactPage.js';
+import { BlogPage } from './pages/BlogPage.js';
 import { NotFoundPage } from './pages/NotFoundPage.js';
 import { DashboardPage } from './pages/DashboardPage.js';
 import { AdminDashboardPage } from './pages/AdminDashboardPage.js';
@@ -29,6 +31,8 @@ export const App: React.FC = () => {
       <Route path="/courses/coding" element={<CodingPage />} />
       <Route path="/courses/english" element={<EnglishPage />} />
       <Route path="/courses/science" element={<SciencePage />} />
+      <Route path="/blog" element={<BlogPage />} />
+      <Route path="/contact" element={<ContactPage />} />
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
 

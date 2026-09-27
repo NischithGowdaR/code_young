@@ -9,6 +9,7 @@ export interface CourseCardProps {
   path: string;
   badge: string;
   icon: React.ReactNode;
+  image?: string;
 }
 
 export const CourseCard: React.FC<CourseCardProps> = ({
@@ -19,33 +20,61 @@ export const CourseCard: React.FC<CourseCardProps> = ({
   path,
   badge,
   icon,
+  image,
 }) => {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-            {icon}
+    <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all duration-300 flex flex-col justify-between overflow-hidden group">
+      <div>
+        {image ? (
+          <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
+            <img
+              src={image}
+              alt={title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+              loading="lazy"
+            />
+            <div className="absolute top-3 right-3">
+              <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-white/95 backdrop-blur-md text-amber-700 shadow-sm border border-amber-200/60 uppercase tracking-wider">
+                {badge}
+              </span>
+            </div>
+            <div className="absolute bottom-3 left-3">
+              <div className="w-10 h-10 rounded-xl bg-white/95 backdrop-blur-md text-indigo-600 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                {icon}
+              </div>
+            </div>
           </div>
-          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-            {badge}
-          </span>
-        </div>
+        ) : (
+          <div className="p-6 pb-0 flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+              {icon}
+            </div>
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+              {badge}
+            </span>
+          </div>
+        )}
 
-        <div className="text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">
-          Ages {ageRange}
-        </div>
-        <h3 className="text-2xl font-bold text-slate-900 mb-2">{title}</h3>
-        <p className="text-sm text-slate-600 mb-4 leading-relaxed">{description}</p>
+        <div className="p-6 pt-5">
+          <div className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-1.5">
+            Ages {ageRange}
+          </div>
+          <h3 className="text-xl font-bold text-slate-900 group-hover:text-indigo-600 transition-colors mb-2">
+            {title}
+          </h3>
+          <p className="text-xs sm:text-sm text-slate-600 mb-4 leading-relaxed line-clamp-2">
+            {description}
+          </p>
 
-        <ul className="space-y-2 mb-6">
-          {highlights.map((highlight, index) => (
-            <li key={index} className="flex items-center text-xs text-slate-700 font-medium gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-              {highlight}
-            </li>
-          ))}
-        </ul>
+          <ul className="space-y-2 mb-2">
+            {highlights.map((highlight, index) => (
+              <li key={index} className="flex items-center text-xs text-slate-700 font-medium gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
+                <span>{highlight}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
       <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">

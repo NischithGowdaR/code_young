@@ -34,6 +34,21 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
+                <a href="/#about" className="hover:text-indigo-400 transition-colors">
+                  About Us
+                </a>
+              </li>
+              <li>
+                <Link to="/blog" className="hover:text-indigo-400 transition-colors">
+                  Blog &amp; Insights
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="hover:text-indigo-400 transition-colors">
+                  Contact Us
+                </Link>
+              </li>
+              <li>
                 <Link to="/book" className="hover:text-indigo-400 transition-colors">
                   Book Free Trial
                 </Link>
@@ -91,16 +106,18 @@ export const Footer: React.FC = () => {
                   Privacy Policy
                 </Link>
               </li>
-              <li className="pt-2 text-xs text-slate-500">Email: support@codeyoung.example</li>
-              <li className="text-xs text-slate-500">Phone: +1 (800) 123-4567</li>
+              <li className="pt-2 text-xs text-slate-500">Email: support@codeyoung.com</li>
+              <li className="text-xs text-slate-500">Phone / WhatsApp: +91-88844-59977</li>
             </ul>
           </div>
         </div>
 
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-          <div>
-            © {new Date().getFullYear()} CodeYoung Trial Class Booking System. All rights reserved.
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-center sm:text-left">
+            <span>© {new Date().getFullYear()} CodeYoung. All rights reserved.</span>
+            <span className="hidden sm:inline text-slate-700">&bull;</span>
+            <span className="font-mono text-slate-500">CIN: U80904KA2020PTC132006</span>
           </div>
           <div className="flex items-center gap-6">
             <Link to="/terms" className="hover:text-slate-400">
@@ -108,6 +125,12 @@ export const Footer: React.FC = () => {
             </Link>
             <Link to="/privacy" className="hover:text-slate-400">
               Privacy
+            </Link>
+            <Link to="/blog" className="hover:text-slate-400">
+              Blog
+            </Link>
+            <Link to="/contact" className="hover:text-slate-400">
+              Contact
             </Link>
           </div>
         </div>

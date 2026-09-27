@@ -5,6 +5,9 @@ import { HeroSection } from '../components/HeroSection.js';
 import { FeatureCard } from '../components/FeatureCard.js';
 import { CourseCard } from '../components/CourseCard.js';
 import { HowItWorks } from '../components/HowItWorks.js';
+import { AboutSection } from '../components/AboutSection.js';
+import { BlogSection } from '../components/BlogSection.js';
+import { ContactSection } from '../components/ContactSection.js';
 import { CallToAction } from '../components/CallToAction.js';
 import { Footer } from '../components/Footer.js';
 import { useAuth } from '../context/AuthContext.js';
@@ -94,34 +97,37 @@ export const HomePage: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               <CourseCard
-                icon={<Code2 className="w-6 h-6 text-indigo-600" />}
+                icon={<Code2 className="w-5 h-5 text-indigo-600" />}
                 title="Coding for Kids"
                 ageRange="6 – 17"
                 description="Build games, apps, Python scripts, and learn fundamentals of AI & Web Development."
                 highlights={['Scratch & Block Coding', 'Python & JavaScript', 'AI & Game Logic']}
                 path="/courses/coding"
                 badge="Most Popular"
+                image="/images/courses/coding_course.jpg"
               />
               <CourseCard
-                icon={<Calculator className="w-6 h-6 text-indigo-600" />}
+                icon={<Calculator className="w-5 h-5 text-indigo-600" />}
                 title="STEM Mathematics"
                 ageRange="5 – 16"
                 description="Master mental math tricks, logic puzzles, spatial reasoning, and Math Olympiads."
                 highlights={['Mental Math Tricks', 'Logic & Aptitude', 'Olympiad Prep']}
                 path="/courses/math"
                 badge="High Demand"
+                image="/images/courses/math_course.jpg"
               />
               <CourseCard
-                icon={<MessageSquare className="w-6 h-6 text-indigo-600" />}
+                icon={<MessageSquare className="w-5 h-5 text-indigo-600" />}
                 title="English Communication"
                 ageRange="5 – 15"
                 description="Develop strong vocabulary, public speaking, creative writing, and persuasive speech."
                 highlights={['Public Speaking', 'Phonics & Grammar', 'Creative Writing']}
                 path="/courses/english"
                 badge="Interactive"
+                image="/images/courses/english_course.jpg"
               />
               <CourseCard
-                icon={<FlaskConical className="w-6 h-6 text-indigo-600" />}
+                icon={<FlaskConical className="w-5 h-5 text-indigo-600" />}
                 title="Interactive Science"
                 ageRange="7 – 16"
                 description="Discover the wonders of Physics, Chemistry, Biology, and astronomy through virtual labs."
@@ -132,6 +138,7 @@ export const HomePage: React.FC = () => {
                 ]}
                 path="/courses/science"
                 badge="New"
+                image="/images/courses/science_course.jpg"
               />
             </div>
           </div>
@@ -139,6 +146,15 @@ export const HomePage: React.FC = () => {
 
         {/* How It Works Section */}
         <HowItWorks />
+
+        {/* About Us Section */}
+        <AboutSection />
+
+        {/* Blog & Insights Section */}
+        <BlogSection />
+
+        {/* Contact Us Section */}
+        <ContactSection />
 
         {/* Final Call to Action */}
         <CallToAction />
@@ -149,3 +165,4 @@ export const HomePage: React.FC = () => {
     </div>
   );
 };
+

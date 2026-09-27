@@ -28,7 +28,8 @@ interface AuthContextType {
     password: string,
     phoneNumber?: string,
     timezone?: string,
-    otpCode?: string
+    otpCode?: string,
+    confirmPassword?: string
   ) => Promise<void>;
   sendForgotPasswordOtp: (
     email: string
@@ -259,7 +260,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     password: string,
     phoneNumber?: string,
     timezone?: string,
-    otpCode?: string
+    otpCode?: string,
+    confirmPassword?: string
   ) => {
     setIsLoading(true);
     setError(null);
@@ -268,7 +270,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ name, email, password, phoneNumber, timezone, otpCode }),
+        body: JSON.stringify({ name, email, password, confirmPassword, phoneNumber, timezone, otpCode }),
       });
 
       const data = await safeParseJson(res);

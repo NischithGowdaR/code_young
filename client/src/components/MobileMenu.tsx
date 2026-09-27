@@ -112,6 +112,38 @@ export const MobileMenu: React.FC = () => {
             )}
           </div>
 
+          <a
+            href="/#about"
+            onClick={closeMenu}
+            className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-50"
+          >
+            About Us
+          </a>
+
+          <Link
+            to="/blog"
+            onClick={closeMenu}
+            className={`block px-3 py-2 rounded-md text-base font-medium ${
+              location.pathname === '/blog'
+                ? 'bg-indigo-50 text-indigo-600 font-semibold'
+                : 'text-slate-700 hover:bg-slate-50'
+            }`}
+          >
+            Blog
+          </Link>
+
+          <Link
+            to="/contact"
+            onClick={closeMenu}
+            className={`block px-3 py-2 rounded-md text-base font-medium ${
+              location.pathname === '/contact'
+                ? 'bg-indigo-50 text-indigo-600 font-semibold'
+                : 'text-slate-700 hover:bg-slate-50'
+            }`}
+          >
+            Contact
+          </Link>
+
           <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
             {user ? (
               <div className="space-y-2">
