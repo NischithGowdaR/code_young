@@ -87,7 +87,7 @@ npm run dev
 ### 5. Running Tests & Production Builds
 
 ```bash
-# Run all 82 client & server tests
+# Run all 92 client & server tests
 npm test
 
 # Run type-checks and production bundle build (Vite + TypeScript)
@@ -310,7 +310,7 @@ npm run dev
 
 ## 8. Test Commands & Quality Assurance
 
-Run the complete test suite (82 tests across 14 test suites covering both workspaces):
+Run the complete test suite (92 tests across 14 test suites covering both workspaces):
 
 ```bash
 npm test
@@ -351,26 +351,27 @@ npm test
 
 ## 9. System Architectural Workflows & Invariants
 
-### Authentication Flow
+### Authentication & Password Reset Flow
 
-1. User registers via `/api/auth/register` or logs in via `/api/auth/login`.
+1. User registers via `/api/auth/register` with email verification or logs in via `/api/auth/login`.
 2. Server validates inputs using Zod, hashes passwords with `bcryptjs`, and issues:
    - A short-lived (15 min) JWT Access Token returned in the JSON payload.
    - A long-lived (7 day) HTTP-only, secure Refresh Token stored as a cookie and hashed in the database.
 3. Protected endpoints verify the `Bearer <token>` via `authenticate` middleware.
-4. Token refreshes occur via `/api/auth/refresh` without interrupting user sessions.
+4. Token refreshes occur via `/api/auth/refresh` without interrupting user sessions across browser reloads.
+5. **Forgot Password**: Users can reset their forgotten password via `/api/auth/forgot-password/*` using a 6-digit email OTP and cryptographic reset token.
 
-### Phone OTP Development Behavior
+### Email OTP Verification & Dispatch Behavior
 
-- In development/test mode, OTP generation logs the 6-digit code to the backend console (`[DEV OTP SERVICE] Generated OTP for <phone>: 123456`).
-- The OTP hash is stored in memory or in the database with a 10-minute expiry time.
+- Transactional emails and verification OTP codes are dispatched using the **Brevo API** (with fallback to `DevelopmentEmailService` in local test suites).
+- 6-digit verification codes are delivered directly to the parent's email inbox for account registration, password resets, and trial requests.
+- The OTP hash is securely stored with a 10-minute expiry time.
 - Implements a 60-second resend cooldown and locks after 5 consecutive failed attempts.
-- In production, the `TwilioOtpService` or SMS gateway handles actual cellular dispatch.
 
 ### Booking Flow
 
 1. **Parent Submission**: Parent completes the trial request form with student details, subject interest, and IANA timezone.
-2. **OTP Verification**: Parent verifies their mobile number.
+2. **Email OTP Verification**: Parent verifies their email address via the 6-digit verification code delivered to their inbox.
 3. **Slot Fetching**: Client requests `/api/availability?date=YYYY-MM-DD&timezone=IANA_TZ`.
 4. **Slot Selection & Booking**: Parent selects a slot and submits `/api/bookings` with `trialRequestId` and `startUtc`.
 5. **Confirmation**: System executes transaction, pairs mentor, generates class link, formats local timestamps, dispatches notifications, and renders confirmation screen.
