@@ -70,6 +70,24 @@ vi.mock('../utils/prisma.js', () => {
           inMemoryUsers.push(newUser);
           return newUser;
         }),
+        update: vi.fn(
+          async ({
+            where,
+            data,
+          }: {
+            where: { id?: string; email?: string };
+            data: Partial<TestUserRecord>;
+          }) => {
+            const found = inMemoryUsers.find(
+              (u) => (where.id && u.id === where.id) || (where.email && u.email === where.email)
+            );
+            if (found) {
+              Object.assign(found, data, { updatedAt: new Date() });
+              return found;
+            }
+            throw new Error('Record not found');
+          }
+        ),
       },
       refreshToken: {
         create: vi.fn(async ({ data }: { data: CreateTokenData }) => {
@@ -279,5 +297,118 @@ describe('Authentication & Authorization API', () => {
 
     expect(adminAccessRes.status).toBe(200);
     expect(adminAccessRes.body.message).toContain('Admin Dashboard');
+  });
+
+  describe('Forgot Password Flow', () => {
+    beforeEach(async () => {
+      // Clear in-memory OTPs
+      const { inMemoryOtps } = await import('../services/otp/developmentOtpService.js');
+      inMemoryOtps.clear();
+      // Ensure test user exists
+      await request(app).post('/api/auth/register').send(testUser);
+    });
+
+    it('9. Send OTP: should return 404 for unregistered email', async () => {
+      const res = await request(app).post('/api/auth/forgot-password/send-otp').send({
+        email: 'nonexistent@example.com',
+      });
+
+      expect(res.status).toBe(404);
+      expect(res.body.message).toContain('No account found');
+    });
+
+    it('10. Send OTP: should send OTP for registered user and return cooldown', async () => {
+      const res = await request(app).post('/api/auth/forgot-password/send-otp').send({
+        email: testUser.email,
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.body.message).toContain('OTP has been sent');
+      expect(res.body.cooldownSeconds).toBe(60);
+    });
+
+    it('11. Verify OTP: should reject incorrect OTP code', async () => {
+      // Send OTP first
+      await request(app).post('/api/auth/forgot-password/send-otp').send({
+        email: testUser.email,
+      });
+
+      const res = await request(app).post('/api/auth/forgot-password/verify-otp').send({
+        email: testUser.email,
+        otpCode: '000000',
+      });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain('Invalid OTP');
+    });
+
+    it('12. Verify OTP: should verify valid OTP code and issue a reset token', async () => {
+      await request(app).post('/api/auth/forgot-password/send-otp').send({
+        email: testUser.email,
+      });
+
+      // '123456' is default in NODE_ENV === 'test'
+      const res = await request(app).post('/api/auth/forgot-password/verify-otp').send({
+        email: testUser.email,
+        otpCode: '123456',
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.body.resetToken).toBeDefined();
+      expect(res.body.message).toContain('verified successfully');
+    });
+
+    it('13. Reset Password: should validate matching passwords and update password successfully', async () => {
+      await request(app).post('/api/auth/forgot-password/send-otp').send({
+        email: testUser.email,
+      });
+
+      const verifyRes = await request(app).post('/api/auth/forgot-password/verify-otp').send({
+        email: testUser.email,
+        otpCode: '123456',
+      });
+
+      const resetToken = verifyRes.body.resetToken;
+
+      // 13a. Reject mismatched password
+      const mismatchRes = await request(app).post('/api/auth/forgot-password/reset-password').send({
+        email: testUser.email,
+        resetToken,
+        newPassword: 'BrandNewPassword123!',
+        confirmPassword: 'DifferentPassword123!',
+      });
+      expect(mismatchRes.status).toBe(400);
+
+      // 13b. Successful reset
+      const newPassword = 'BrandNewPassword123!';
+      const resetRes = await request(app).post('/api/auth/forgot-password/reset-password').send({
+        email: testUser.email,
+        resetToken,
+        newPassword,
+        confirmPassword: newPassword,
+      });
+
+      expect(resetRes.status).toBe(200);
+      expect(resetRes.body.message).toContain('reset successfully');
+      expect(resetRes.body.user.email).toBe(testUser.email);
+      expect(resetRes.body.accessToken).toBeDefined();
+
+      // 13c. Verify user can now log in with the new password
+      const loginRes = await request(app).post('/api/auth/login').send({
+        email: testUser.email,
+        password: newPassword,
+      });
+
+      expect(loginRes.status).toBe(200);
+      expect(loginRes.body.user.email).toBe(testUser.email);
+
+      // 13d. Old password should no longer work
+      const oldLoginRes = await request(app).post('/api/auth/login').send({
+        email: testUser.email,
+        password: testUser.password,
+      });
+
+      expect(oldLoginRes.status).toBe(401);
+    });
   });
 });

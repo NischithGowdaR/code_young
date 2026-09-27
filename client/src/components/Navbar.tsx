@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { CourseDropdown } from './CourseDropdown.js';
 import { MobileMenu } from './MobileMenu.js';
 import { useAuth } from '../context/AuthContext.js';
+import { Shield, LayoutDashboard } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const location = useLocation();
@@ -44,17 +45,19 @@ export const Navbar: React.FC = () => {
             {user.role === 'ADMIN' ? (
               <Link
                 to="/admin"
-                className="px-3 py-1.5 text-xs font-bold bg-purple-100 text-purple-700 hover:bg-purple-200 border border-purple-300 rounded-lg transition-colors flex items-center gap-1"
+                className="px-3 py-1.5 text-xs font-bold bg-purple-100 text-purple-700 hover:bg-purple-200 border border-purple-300 rounded-lg transition-colors flex items-center gap-1.5"
               >
-                <span>🛡️ Admin Portal</span>
+                <Shield className="w-3.5 h-3.5" />
+                <span>Admin Portal</span>
               </Link>
             ) : (
               <>
                 <Link
                   to="/dashboard"
-                  className="px-3.5 py-1.5 text-xs font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors flex items-center gap-1"
+                  className="px-3.5 py-1.5 text-xs font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors flex items-center gap-1.5"
                 >
-                  <span>📊 Dashboard</span>
+                  <LayoutDashboard className="w-3.5 h-3.5" />
+                  <span>Dashboard</span>
                 </Link>
                 <Link
                   to="/book"

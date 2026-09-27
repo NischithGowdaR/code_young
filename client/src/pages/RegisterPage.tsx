@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header.js';
 import { Footer } from '../components/Footer.js';
 import { useAuth } from '../context/AuthContext.js';
+import { UserPlus, Mail, CheckCircle2, AlertCircle } from 'lucide-react';
 
 const TIMEZONES = [
   { value: 'America/New_York', label: 'US - Eastern Time (America/New_York)' },
@@ -104,8 +105,8 @@ export const RegisterPage: React.FC = () => {
       <main className="flex-grow flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
           <div className="text-center mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-2xl mx-auto mb-3 font-bold">
-              {step === 'FORM' ? '📝' : '✉️'}
+            <div className="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mx-auto mb-3 shadow-sm">
+              {step === 'FORM' ? <UserPlus className="w-7 h-7" /> : <Mail className="w-7 h-7" />}
             </div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
               {step === 'FORM' ? 'Parent Registration' : 'Verify Your Email'}
@@ -118,14 +119,16 @@ export const RegisterPage: React.FC = () => {
           </div>
 
           {otpSuccess && (
-            <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold rounded-xl">
-              ✓ {otpSuccess}
+            <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold rounded-xl flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+              <span>{otpSuccess}</span>
             </div>
           )}
 
           {(formError || error) && (
-            <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded-xl">
-              {formError || error}
+            <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded-xl flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+              <span>{formError || error}</span>
             </div>
           )}
 

@@ -4,6 +4,7 @@ import { Header } from '../components/Header.js';
 import { Footer } from '../components/Footer.js';
 import { useAuth } from '../context/AuthContext.js';
 import { apiUrl } from '../config/api.js';
+import { BarChart3, Calendar, User, Sparkles } from 'lucide-react';
 
 interface DashboardData {
   user: {
@@ -16,8 +17,8 @@ interface DashboardData {
   };
   studentSummary: {
     totalTrialRequests: number;
-    primaryCourse: string;
-    grade: string;
+    primaryCourse: string | null;
+    grade: string | null;
   };
   upcomingBookings: Array<{
     id: string;
@@ -133,42 +134,46 @@ export const DashboardPage: React.FC = () => {
         <div className="flex items-center gap-2 border-b border-slate-200 mb-8 overflow-x-auto pb-2">
           <Link
             to="/dashboard"
-            className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap ${
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap ${
               activeTab === 'overview'
                 ? 'bg-indigo-600 text-white shadow'
                 : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-100'
             }`}
           >
-            📊 Overview
+            <BarChart3 className="w-4 h-4" />
+            <span>Overview</span>
           </Link>
 
           <Link
             to="/dashboard/bookings"
-            className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap ${
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap ${
               activeTab === 'bookings'
                 ? 'bg-indigo-600 text-white shadow'
                 : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-100'
             }`}
           >
-            🗓️ My Bookings
+            <Calendar className="w-4 h-4" />
+            <span>My Bookings</span>
           </Link>
 
           <Link
             to="/dashboard/profile"
-            className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap ${
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap ${
               activeTab === 'profile'
                 ? 'bg-indigo-600 text-white shadow'
                 : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-100'
             }`}
           >
-            👤 Parent Profile
+            <User className="w-4 h-4" />
+            <span>Parent Profile</span>
           </Link>
 
           <Link
             to="/book"
-            className="px-4 py-2 text-sm font-semibold text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors whitespace-nowrap ml-auto"
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors whitespace-nowrap ml-auto"
           >
-            ⚡ Quick Book Trial
+            <Sparkles className="w-4 h-4" />
+            <span>Quick Book Trial</span>
           </Link>
         </div>
 
@@ -199,12 +204,25 @@ export const DashboardPage: React.FC = () => {
                     <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
                       Student Info & Grade
                     </div>
-                    <div className="text-xl font-bold text-slate-900">
-                      {data?.studentSummary.grade || 'Grade 5'}
-                    </div>
-                    <div className="text-xs text-indigo-600 font-semibold mt-1">
-                      Course: {data?.studentSummary.primaryCourse}
-                    </div>
+                    {data?.studentSummary?.grade ? (
+                      <>
+                        <div className="text-xl font-bold text-slate-900">
+                          {data.studentSummary.grade}
+                        </div>
+                        <div className="text-xs text-indigo-600 font-semibold mt-1">
+                          Course: {data.studentSummary.primaryCourse || 'General'}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-base font-bold text-slate-700">
+                          Not selected yet
+                        </div>
+                        <div className="text-xs text-slate-400 mt-1">
+                          No trial class booked yet
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
@@ -349,7 +367,7 @@ export const DashboardPage: React.FC = () => {
                   <div className="pt-4 flex justify-between">
                     <span className="text-slate-500 font-medium">Phone Number</span>
                     <span className="font-bold text-slate-900">
-                      {data?.user.phoneNumber || '+1 555-0199'}
+                      {data?.user.phoneNumber || 'Not provided'}
                     </span>
                   </div>
 

@@ -43,11 +43,6 @@ export const Footer: React.FC = () => {
                   Parent Login
                 </Link>
               </li>
-              <li>
-                <Link to="/admin" className="hover:text-indigo-400 text-slate-400 transition-colors">
-                  Admin Portal
-                </Link>
-              </li>
             </ul>
           </div>
 

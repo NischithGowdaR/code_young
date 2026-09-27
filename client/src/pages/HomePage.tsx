@@ -9,6 +9,17 @@ import { CallToAction } from '../components/CallToAction.js';
 import { Footer } from '../components/Footer.js';
 import { useAuth } from '../context/AuthContext.js';
 
+import {
+  GraduationCap,
+  Rocket,
+  Users,
+  TrendingUp,
+  Code2,
+  Calculator,
+  MessageSquare,
+  FlaskConical,
+} from 'lucide-react';
+
 export const HomePage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -46,22 +57,22 @@ export const HomePage: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               <FeatureCard
-                icon="🌟"
+                icon={<GraduationCap className="w-6 h-6 text-indigo-600" />}
                 title="Certified Expert Mentors"
                 description="Handpicked, vetted educators passionate about nurturing young talent through engaging interactive pedagogy."
               />
               <FeatureCard
-                icon="🚀"
+                icon={<Rocket className="w-6 h-6 text-indigo-600" />}
                 title="STEM & Future-Ready"
                 description="Curriculum designed around practical problem-solving, logic, coding, and real-world application."
               />
               <FeatureCard
-                icon="🎯"
+                icon={<Users className="w-6 h-6 text-indigo-600" />}
                 title="1-on-1 & Small Groups"
                 description="Personalized attention customized to your child's learning speed, interest, and unique cognitive style."
               />
               <FeatureCard
-                icon="📊"
+                icon={<TrendingUp className="w-6 h-6 text-indigo-600" />}
                 title="Parent Progress Tracking"
                 description="Comprehensive feedback reports, milestone tracking, and project showcases after every learning module."
               />
@@ -83,7 +94,7 @@ export const HomePage: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               <CourseCard
-                icon="💻"
+                icon={<Code2 className="w-6 h-6 text-indigo-600" />}
                 title="Coding for Kids"
                 ageRange="6 – 17"
                 description="Build games, apps, Python scripts, and learn fundamentals of AI & Web Development."
@@ -92,7 +103,7 @@ export const HomePage: React.FC = () => {
                 badge="Most Popular"
               />
               <CourseCard
-                icon="📐"
+                icon={<Calculator className="w-6 h-6 text-indigo-600" />}
                 title="STEM Mathematics"
                 ageRange="5 – 16"
                 description="Master mental math tricks, logic puzzles, spatial reasoning, and Math Olympiads."
@@ -101,7 +112,7 @@ export const HomePage: React.FC = () => {
                 badge="High Demand"
               />
               <CourseCard
-                icon="🗣️"
+                icon={<MessageSquare className="w-6 h-6 text-indigo-600" />}
                 title="English Communication"
                 ageRange="5 – 15"
                 description="Develop strong vocabulary, public speaking, creative writing, and persuasive speech."
@@ -110,7 +121,7 @@ export const HomePage: React.FC = () => {
                 badge="Interactive"
               />
               <CourseCard
-                icon="🔬"
+                icon={<FlaskConical className="w-6 h-6 text-indigo-600" />}
                 title="Interactive Science"
                 ageRange="7 – 16"
                 description="Discover the wonders of Physics, Chemistry, Biology, and astronomy through virtual labs."

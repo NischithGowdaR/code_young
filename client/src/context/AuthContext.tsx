@@ -29,6 +29,19 @@ interface AuthContextType {
     timezone?: string,
     otpCode?: string
   ) => Promise<void>;
+  sendForgotPasswordOtp: (
+    email: string
+  ) => Promise<{ message: string; cooldownSeconds: number }>;
+  verifyForgotPasswordOtp: (
+    email: string,
+    otpCode: string
+  ) => Promise<{ message: string; resetToken: string }>;
+  resetPassword: (
+    email: string,
+    resetToken: string,
+    newPassword: string,
+    confirmPassword: string
+  ) => Promise<{ message: string; user: User }>;
   logout: () => Promise<void>;
   clearError: () => void;
 }
@@ -189,6 +202,103 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const sendForgotPasswordOtp = async (email: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/forgot-password/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await safeParseJson(res);
+      if (!res.ok) {
+        const errorMsg =
+          data.message ||
+          data.error ||
+          (res.status === 404
+            ? 'No account found with this email address. Please register first.'
+            : 'Failed to send password reset OTP');
+        throw new Error(errorMsg);
+      }
+
+      return data;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to send OTP';
+      setError(msg);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyForgotPasswordOtp = async (email: string, otpCode: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/forgot-password/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otpCode }),
+      });
+
+      const data = await safeParseJson(res);
+      if (!res.ok) {
+        const errorMsg =
+          data.message || data.error || 'Invalid or expired OTP. Please try again.';
+        throw new Error(errorMsg);
+      }
+
+      return data;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Invalid or expired OTP';
+      setError(msg);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetPassword = async (
+    email: string,
+    resetToken: string,
+    newPassword: string,
+    confirmPassword: string
+  ) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/forgot-password/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, resetToken, newPassword, confirmPassword }),
+      });
+
+      const data = await safeParseJson(res);
+      if (!res.ok) {
+        const errorMsg =
+          data.message || data.error || 'Failed to reset password. Please try again.';
+        throw new Error(errorMsg);
+      }
+
+      if (data.user) {
+        setUser(data.user);
+      }
+      if (data.accessToken) {
+        setAccessToken(data.accessToken);
+      }
+
+      return data;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to reset password';
+      setError(msg);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = async () => {
     setIsLoading(true);
     try {
@@ -216,6 +326,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         login,
         sendRegistrationOtp,
         register,
+        sendForgotPasswordOtp,
+        verifyForgotPasswordOtp,
+        resetPassword,
         logout,
         clearError,
       }}

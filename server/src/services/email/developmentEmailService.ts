@@ -24,8 +24,8 @@ export interface SentEmailLogRecord {
 }
 
 /**
- * Email Service with Nodemailer SMTP transport for real email delivery,
- * and safe development in-memory logging fallback.
+ * Brevo-First Email Service with SMTP & Resend fallbacks,
+ * and safe development logging.
  */
 export class DevelopmentEmailService implements IEmailService {
   public sentEmails: SentEmailLogRecord[] = [];
@@ -82,6 +82,53 @@ export class DevelopmentEmailService implements IEmailService {
     return `"CodeYoung" <${user.trim()}>`;
   }
 
+  /**
+   * Primary Brevo Dispatch Helper
+   */
+  private async sendViaBrevo(
+    toEmail: string,
+    recipientName: string,
+    subject: string,
+    textContent: string,
+    htmlContent: string
+  ): Promise<{ success: boolean; messageId: string } | null> {
+    const brevoApiKey = process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY;
+    if (!brevoApiKey) {
+      return null;
+    }
+
+    const senderEmail = process.env.SMTP_USER || 'nischitgowdar71@gmail.com';
+
+    try {
+      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'api-key': brevoApiKey.trim(),
+        },
+        body: JSON.stringify({
+          sender: { name: 'CodeYoung', email: senderEmail.trim() },
+          to: [{ email: toEmail.trim(), name: recipientName.trim() || 'User' }],
+          subject,
+          textContent,
+          htmlContent,
+        }),
+      });
+
+      const resData = await res.json().catch(() => ({}));
+      if (res.ok) {
+        console.log(`[BREVO API SUCCESS] Delivered email to ${toEmail}:`, resData);
+        return { success: true, messageId: resData.messageId || `msg_brevo_${crypto.randomUUID()}` };
+      } else {
+        console.error(`[BREVO API ERROR ${res.status}] to ${toEmail}:`, resData);
+        return null;
+      }
+    } catch (err) {
+      console.error('[BREVO API NETWORK ERROR]:', err);
+      return null;
+    }
+  }
+
   async sendEmail(payload: EmailPayload): Promise<{ success: boolean; messageId: string }> {
     const messageId = `msg_dev_${crypto.randomUUID()}`;
     const record: SentEmailLogRecord = {
@@ -95,6 +142,37 @@ export class DevelopmentEmailService implements IEmailService {
 
     this.sentEmails.push(record);
 
+    // 1. PRIMARY: Brevo API
+    const brevoResult = await this.sendViaBrevo(
+      payload.to,
+      'User',
+      payload.subject,
+      payload.textBody,
+      payload.htmlBody
+    );
+    if (brevoResult) {
+      return brevoResult;
+    }
+
+    // 2. FALLBACK: SMTP Transporter
+    const transporter = this.getTransporter();
+    if (transporter) {
+      try {
+        await transporter.sendMail({
+          from: this.getFromAddress(),
+          to: payload.to,
+          subject: payload.subject,
+          text: payload.textBody,
+          html: payload.htmlBody,
+        });
+        console.log(`[EMAIL SERVICE] Successfully delivered SMTP email to ${payload.to}`);
+        return { success: true, messageId };
+      } catch (err) {
+        console.error(`[EMAIL SERVICE] Failed to deliver SMTP email to ${payload.to}:`, err);
+      }
+    }
+
+    // 3. FALLBACK: Resend API
     const resendApiKey = process.env.RESEND_API_KEY;
     if (resendApiKey) {
       try {
@@ -102,7 +180,7 @@ export class DevelopmentEmailService implements IEmailService {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${resendApiKey.trim()}`,
+            Authorization: `Bearer ${resendApiKey.trim()}`,
           },
           body: JSON.stringify({
             from: process.env.RESEND_FROM || 'CodeYoung <onboarding@resend.dev>',
@@ -121,57 +199,6 @@ export class DevelopmentEmailService implements IEmailService {
       }
     }
 
-    const brevoApiKey = process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY;
-    if (brevoApiKey) {
-      try {
-        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'api-key': brevoApiKey.trim(),
-          },
-          body: JSON.stringify({
-            sender: { name: 'CodeYoung', email: process.env.SMTP_USER || 'nischitgowdar71@gmail.com' },
-            to: [{ email: payload.to, name: 'User' }],
-            subject: payload.subject,
-            textContent: payload.textBody,
-            htmlContent: payload.htmlBody,
-          }),
-        });
-        const resData = await res.json().catch(() => ({}));
-        if (res.ok) {
-          console.log(`[BREVO API SUCCESS] Delivered email to ${payload.to}:`, resData);
-          return { success: true, messageId };
-        } else {
-          console.error(`[BREVO API ERROR ${res.status}] to ${payload.to}:`, resData);
-        }
-      } catch (err) {
-        console.error('[BREVO API NETWORK ERROR]:', err);
-      }
-    }
-
-    const transporter = this.getTransporter();
-    if (transporter) {
-      try {
-        await transporter.sendMail({
-          from: this.getFromAddress(),
-          to: payload.to,
-          subject: payload.subject,
-          text: payload.textBody,
-          html: payload.htmlBody,
-        });
-        console.log(`[EMAIL SERVICE] Successfully delivered SMTP email to ${payload.to}`);
-      } catch (err) {
-        console.error(`[EMAIL SERVICE] Failed to deliver SMTP email to ${payload.to}:`, err);
-      }
-    } else {
-      if (process.env.NODE_ENV !== 'test') {
-        console.log(
-          `[DEV EMAIL SERVICE] (No SMTP credentials) Logged email to ${payload.to} | Subject: "${payload.subject}"`
-        );
-      }
-    }
-
     return { success: true, messageId };
   }
 
@@ -183,7 +210,7 @@ export class DevelopmentEmailService implements IEmailService {
     const subject = `Your CodeYoung Verification Code: ${code}`;
     const textBody = `Hello ${name || 'Parent'},\n\nYour 6-digit verification code is: ${code}\n\nThis code will expire in 10 minutes. If you did not request this code, please ignore this email.\n\nBest regards,\nCodeYoung Team`;
     const htmlBody = `
-      <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+      <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
         <h2 style="color: #4f46e5; margin-bottom: 8px;">CodeYoung Verification</h2>
         <p style="color: #475569; font-size: 14px;">Hello <strong>${name || 'Parent'}</strong>,</p>
         <p style="color: #475569; font-size: 14px;">Use the verification code below to verify your account:</p>
@@ -206,64 +233,17 @@ export class DevelopmentEmailService implements IEmailService {
 
     this.sentEmails.push(record);
 
-    const resendApiKey = process.env.RESEND_API_KEY;
-    if (resendApiKey) {
-      try {
-        const res = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${resendApiKey.trim()}`,
-          },
-          body: JSON.stringify({
-            from: process.env.RESEND_FROM || 'CodeYoung <onboarding@resend.dev>',
-            to: [email],
-            subject,
-            text: textBody,
-            html: htmlBody,
-          }),
-        });
-        const resData = await res.json().catch(() => ({}));
-        if (res.ok) {
-          console.log(`[RESEND API SUCCESS] Delivered OTP email to ${email}:`, resData);
-          return { success: true, messageId };
-        } else {
-          console.error(`[RESEND API ERROR ${res.status}] to ${email}:`, resData);
-        }
-      } catch (err) {
-        console.error('[RESEND API NETWORK ERROR]:', err);
-      }
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[EMAIL OTP DISPATCH] To: ${email} | Code: ${code} | Subject: "${subject}"`);
     }
 
-    const brevoApiKey = process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY;
-    if (brevoApiKey) {
-      try {
-        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'api-key': brevoApiKey.trim(),
-          },
-          body: JSON.stringify({
-            sender: { name: 'CodeYoung', email: process.env.SMTP_USER || 'nischitgowdar71@gmail.com' },
-            to: [{ email, name: name || 'Parent' }],
-            subject,
-            textContent: textBody,
-            htmlContent: htmlBody,
-          }),
-        });
-        const resData = await res.json().catch(() => ({}));
-        if (res.ok) {
-          console.log(`[BREVO API SUCCESS] Delivered OTP email to ${email}:`, resData);
-          return { success: true, messageId };
-        } else {
-          console.error(`[BREVO API ERROR ${res.status}] to ${email}:`, resData);
-        }
-      } catch (err) {
-        console.error('[BREVO API NETWORK ERROR]:', err);
-      }
+    // 1. PRIMARY: Brevo API
+    const brevoResult = await this.sendViaBrevo(email, name || 'Parent', subject, textBody, htmlBody);
+    if (brevoResult) {
+      return brevoResult;
     }
 
+    // 2. FALLBACK: SMTP Transporter
     const transporter = this.getTransporter();
     if (transporter) {
       try {
@@ -274,13 +254,127 @@ export class DevelopmentEmailService implements IEmailService {
           text: textBody,
           html: htmlBody,
         });
-        console.log(`[EMAIL OTP] Successfully delivered real OTP [${code}] to ${email}`);
+        console.log(`[EMAIL OTP] Delivered OTP [${code}] via SMTP fallback to ${email}`);
+        return { success: true, messageId };
       } catch (err) {
-        console.error(`[EMAIL OTP] Failed to deliver real OTP to ${email}:`, err);
+        console.error(`[EMAIL OTP] Direct SMTP delivery failed for ${email}:`, err);
       }
-    } else {
-      if (process.env.NODE_ENV !== 'test') {
-        console.log(`[EMAIL OTP] (No SMTP/API configured) Code [${code}] for ${email}`);
+    }
+
+    // 3. FALLBACK: Resend API
+    const resendApiKey = process.env.RESEND_API_KEY;
+    if (resendApiKey) {
+      try {
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${resendApiKey.trim()}`,
+          },
+          body: JSON.stringify({
+            from: process.env.RESEND_FROM || 'CodeYoung <onboarding@resend.dev>',
+            to: [email],
+            subject,
+            text: textBody,
+            html: htmlBody,
+          }),
+        });
+        if (res.ok) {
+          console.log(`[RESEND API SUCCESS] Delivered OTP email to ${email}`);
+          return { success: true, messageId };
+        }
+      } catch (err) {
+        console.error('[RESEND API ERROR]:', err);
+      }
+    }
+
+    return { success: true, messageId };
+  }
+
+  async sendPasswordResetOtpEmail(
+    email: string,
+    name: string,
+    code: string
+  ): Promise<{ success: boolean; messageId: string }> {
+    const subject = 'Password Reset OTP – CodeYoung';
+    const textBody = `Hello ${name || 'Parent'},\n\nYour 6-digit OTP to reset your password is: ${code}\n\nThis OTP is valid for 10 minutes. If you did not request this password reset, please secure your account immediately.\n\nBest regards,\nCodeYoung Team`;
+    const htmlBody = `
+      <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+        <h2 style="color: #4f46e5; margin-bottom: 8px;">Password Reset Request</h2>
+        <p style="color: #475569; font-size: 14px;">Hello <strong>${name || 'Parent'}</strong>,</p>
+        <p style="color: #475569; font-size: 14px;">You recently requested to reset your password for your CodeYoung account. Please use the 6-digit OTP below:</p>
+        <div style="background-color: #f1f5f9; padding: 18px; border-radius: 8px; text-align: center; margin: 20px 0;">
+          <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #1e293b; font-family: monospace;">${code}</span>
+        </div>
+        <p style="color: #dc2626; font-size: 13px; font-weight: 600;">This OTP expires in 10 minutes.</p>
+        <p style="color: #94a3b8; font-size: 12px; margin-top: 16px;">If you did not request a password reset, you can safely ignore this email.</p>
+      </div>
+    `;
+
+    const messageId = `msg_pwd_otp_${crypto.randomUUID()}`;
+    const record: SentEmailLogRecord = {
+      messageId,
+      to: email,
+      subject,
+      sentAt: new Date(),
+      type: 'OTP',
+      params: { textBody, htmlBody, code },
+    };
+
+    this.sentEmails.push(record);
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[PASSWORD RESET OTP DISPATCH] To: ${email} | Code: ${code} | Subject: "${subject}"`);
+    }
+
+    // 1. PRIMARY: Brevo API
+    const brevoResult = await this.sendViaBrevo(email, name || 'Parent', subject, textBody, htmlBody);
+    if (brevoResult) {
+      return brevoResult;
+    }
+
+    // 2. FALLBACK: SMTP Transporter
+    const transporter = this.getTransporter();
+    if (transporter) {
+      try {
+        await transporter.sendMail({
+          from: this.getFromAddress(),
+          to: email,
+          subject,
+          text: textBody,
+          html: htmlBody,
+        });
+        console.log(`[EMAIL OTP] Successfully delivered password reset OTP [${code}] via SMTP fallback to ${email}`);
+        return { success: true, messageId };
+      } catch (err) {
+        console.error(`[EMAIL OTP] Direct SMTP delivery failed for ${email}:`, err);
+      }
+    }
+
+    // 3. FALLBACK: Resend API
+    const resendApiKey = process.env.RESEND_API_KEY;
+    if (resendApiKey) {
+      try {
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${resendApiKey.trim()}`,
+          },
+          body: JSON.stringify({
+            from: process.env.RESEND_FROM || 'CodeYoung <onboarding@resend.dev>',
+            to: [email],
+            subject,
+            text: textBody,
+            html: htmlBody,
+          }),
+        });
+        if (res.ok) {
+          console.log(`[RESEND API SUCCESS] Delivered password reset OTP to ${email}`);
+          return { success: true, messageId };
+        }
+      } catch (err) {
+        console.error('[RESEND API ERROR]:', err);
       }
     }
 
@@ -341,6 +435,42 @@ export class DevelopmentEmailService implements IEmailService {
 
     this.sentEmails.push(record);
 
+    // 1. PRIMARY: Brevo API
+    const brevoResult = await this.sendViaBrevo(
+      params.recipientEmail,
+      params.recipientName,
+      subject,
+      textBody,
+      htmlBody
+    );
+    if (brevoResult) {
+      return brevoResult;
+    }
+
+    // 2. FALLBACK: SMTP Transporter
+    const transporter = this.getTransporter();
+    if (transporter) {
+      try {
+        await transporter.sendMail({
+          from: this.getFromAddress(),
+          to: params.recipientEmail,
+          subject,
+          text: textBody,
+          html: htmlBody,
+        });
+        console.log(
+          `[EMAIL SERVICE] Successfully delivered confirmation email via SMTP to ${params.recipientEmail}`
+        );
+        return { success: true, messageId };
+      } catch (err) {
+        console.error(
+          `[EMAIL SERVICE] Failed to deliver confirmation email to ${params.recipientEmail}:`,
+          err
+        );
+      }
+    }
+
+    // 3. FALLBACK: Resend API
     const resendApiKey = process.env.RESEND_API_KEY;
     if (resendApiKey) {
       try {
@@ -348,7 +478,7 @@ export class DevelopmentEmailService implements IEmailService {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${resendApiKey.trim()}`,
+            Authorization: `Bearer ${resendApiKey.trim()}`,
           },
           body: JSON.stringify({
             from: process.env.RESEND_FROM || 'CodeYoung <onboarding@resend.dev>',
@@ -364,62 +494,6 @@ export class DevelopmentEmailService implements IEmailService {
         }
       } catch (err) {
         console.error('[RESEND API ERROR]:', err);
-      }
-    }
-
-    const brevoApiKey = process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY;
-    if (brevoApiKey) {
-      try {
-        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'api-key': brevoApiKey.trim(),
-          },
-          body: JSON.stringify({
-            sender: { name: 'CodeYoung', email: process.env.SMTP_USER || 'nischitgowdar71@gmail.com' },
-            to: [{ email: params.recipientEmail, name: params.recipientName }],
-            subject,
-            textContent: textBody,
-            htmlContent: htmlBody,
-          }),
-        });
-        const resData = await res.json().catch(() => ({}));
-        if (res.ok) {
-          console.log(`[BREVO API SUCCESS] Delivered confirmation email to ${params.recipientEmail}:`, resData);
-          return { success: true, messageId };
-        } else {
-          console.error(`[BREVO API ERROR ${res.status}] to ${params.recipientEmail}:`, resData);
-        }
-      } catch (err) {
-        console.error('[BREVO API NETWORK ERROR]:', err);
-      }
-    }
-
-    const transporter = this.getTransporter();
-    if (transporter) {
-      try {
-        await transporter.sendMail({
-          from: this.getFromAddress(),
-          to: params.recipientEmail,
-          subject,
-          text: textBody,
-          html: htmlBody,
-        });
-        console.log(
-          `[EMAIL SERVICE] Successfully delivered confirmation email to ${params.recipientEmail}`
-        );
-      } catch (err) {
-        console.error(
-          `[EMAIL SERVICE] Failed to deliver confirmation email to ${params.recipientEmail}:`,
-          err
-        );
-      }
-    } else {
-      if (process.env.NODE_ENV !== 'test') {
-        console.log(
-          `[DEV EMAIL SERVICE] (No SMTP configured) Logged ${params.isParent ? 'Parent' : 'Mentor'} confirmation for ${params.recipientEmail}`
-        );
       }
     }
 
@@ -453,6 +527,42 @@ export class DevelopmentEmailService implements IEmailService {
 
     this.sentEmails.push(record);
 
+    // 1. PRIMARY: Brevo API
+    const brevoResult = await this.sendViaBrevo(
+      params.recipientEmail,
+      params.recipientName,
+      subject,
+      textBody,
+      htmlBody
+    );
+    if (brevoResult) {
+      return brevoResult;
+    }
+
+    // 2. FALLBACK: SMTP Transporter
+    const transporter = this.getTransporter();
+    if (transporter) {
+      try {
+        await transporter.sendMail({
+          from: this.getFromAddress(),
+          to: params.recipientEmail,
+          subject,
+          text: textBody,
+          html: htmlBody,
+        });
+        console.log(
+          `[EMAIL SERVICE] Successfully delivered cancellation email via SMTP to ${params.recipientEmail}`
+        );
+        return { success: true, messageId };
+      } catch (err) {
+        console.error(
+          `[EMAIL SERVICE] Failed to deliver cancellation email to ${params.recipientEmail}:`,
+          err
+        );
+      }
+    }
+
+    // 3. FALLBACK: Resend API
     const resendApiKey = process.env.RESEND_API_KEY;
     if (resendApiKey) {
       try {
@@ -460,7 +570,7 @@ export class DevelopmentEmailService implements IEmailService {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${resendApiKey.trim()}`,
+            Authorization: `Bearer ${resendApiKey.trim()}`,
           },
           body: JSON.stringify({
             from: process.env.RESEND_FROM || 'CodeYoung <onboarding@resend.dev>',
@@ -476,62 +586,6 @@ export class DevelopmentEmailService implements IEmailService {
         }
       } catch (err) {
         console.error('[RESEND API ERROR]:', err);
-      }
-    }
-
-    const brevoApiKeyCancel = process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY;
-    if (brevoApiKeyCancel) {
-      try {
-        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'api-key': brevoApiKeyCancel.trim(),
-          },
-          body: JSON.stringify({
-            sender: { name: 'CodeYoung', email: process.env.SMTP_USER || 'nischitgowdar71@gmail.com' },
-            to: [{ email: params.recipientEmail, name: params.recipientName }],
-            subject,
-            textContent: textBody,
-            htmlContent: htmlBody,
-          }),
-        });
-        const resData = await res.json().catch(() => ({}));
-        if (res.ok) {
-          console.log(`[BREVO API SUCCESS] Delivered cancellation email to ${params.recipientEmail}:`, resData);
-          return { success: true, messageId };
-        } else {
-          console.error(`[BREVO API ERROR ${res.status}] to ${params.recipientEmail}:`, resData);
-        }
-      } catch (err) {
-        console.error('[BREVO API NETWORK ERROR]:', err);
-      }
-    }
-
-    const transporter = this.getTransporter();
-    if (transporter) {
-      try {
-        await transporter.sendMail({
-          from: this.getFromAddress(),
-          to: params.recipientEmail,
-          subject,
-          text: textBody,
-          html: htmlBody,
-        });
-        console.log(
-          `[EMAIL SERVICE] Successfully delivered cancellation email to ${params.recipientEmail}`
-        );
-      } catch (err) {
-        console.error(
-          `[EMAIL SERVICE] Failed to deliver cancellation email to ${params.recipientEmail}:`,
-          err
-        );
-      }
-    } else {
-      if (process.env.NODE_ENV !== 'test') {
-        console.log(
-          `[DEV EMAIL SERVICE] (No SMTP configured) Logged cancellation for ${params.recipientEmail}`
-        );
       }
     }
 
@@ -551,4 +605,3 @@ export function getEmailService(): IEmailService {
 export function setEmailService(service: IEmailService): void {
   emailServiceInstance = service;
 }
-

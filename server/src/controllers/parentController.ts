@@ -81,6 +81,9 @@ parentRouter.get(
 
       const previousBookings = dbBookings.filter((b) => new Date(b.startUtc) < now);
 
+      const primaryCourse = pendingList[0]?.course || dbBookings[0]?.course || null;
+      const grade = pendingList[0]?.studentGrade || dbBookings[0]?.studentGrade || null;
+
       res.status(200).json({
         user: {
           id: req.user.userId,
@@ -92,8 +95,8 @@ parentRouter.get(
         },
         studentSummary: {
           totalTrialRequests: pendingList.length + dbBookings.length,
-          primaryCourse: pendingList[0]?.course || dbBookings[0]?.course || 'CODING',
-          grade: pendingList[0]?.studentGrade || dbBookings[0]?.studentGrade || 'Grade 5',
+          primaryCourse,
+          grade,
         },
         upcomingBookings,
         previousBookings,
@@ -178,7 +181,7 @@ parentRouter.get(
           id: req.user.userId,
           name: user?.name || req.user.email.split('@')[0],
           email: req.user.email,
-          phoneNumber: user?.phoneNumber || '+1 555-0199',
+          phoneNumber: user?.phoneNumber || null,
           timezone: user?.timezone || 'Asia/Kolkata',
           role: req.user.role,
           createdAt: user?.createdAt || new Date(),

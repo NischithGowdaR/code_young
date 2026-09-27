@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" fill="none" width="320" height="80">
+  <defs>
+    <radialGradient id="fullSphere" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="50%" stop-color="#00F0FF" />
+      <stop offset="100%" stop-color="#0B1A30" />
+    </radialGradient>
+    <linearGradient id="accentLine" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00F0FF" />
+      <stop offset="100%" stop-color="#3B82F6" />
+    </linearGradient>
+  </defs>
+
+  <!-- Left: Icon Mark -->
+  <g transform="translate(4, 0)">
+    <ellipse cx="40" cy="62" rx="26" ry="7" stroke="#00F0FF" stroke-width="2" opacity="0.7" fill="none" />
+    <ellipse cx="40" cy="62" rx="16" ry="4" stroke="#00F0FF" stroke-width="1" opacity="0.3" fill="none" />
+    <path d="M 22 57 C 20 44, 25 35, 30 30" stroke="#00F0FF" stroke-width="1.75" stroke-linecap="round" fill="none" />
+    <path d="M 58 57 C 60 44, 55 35, 50 30" stroke="#00F0FF" stroke-width="1.75" stroke-linecap="round" fill="none" />
+    <circle cx="40" cy="30" r="14" fill="url(#fullSphere)" />
+    <circle cx="40" cy="30" r="14" stroke="#FFFFFF" stroke-width="0.5" stroke-opacity="0.9" fill="none" />
+  </g>
+
+  <!-- Right: Typography 'Code young' -->
+  <text x="88" y="38" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif" font-size="24" font-weight="800" fill="#FFFFFF" letter-spacing="1">CODE</text>
+  <text x="88" y="62" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif" font-size="22" font-weight="400" fill="#00F0FF" letter-spacing="2">YOUNG</text>
+
+  <!-- Tech Accent Line -->
+  <line x1="184" y1="26" x2="280" y2="26" stroke="url(#accentLine)" stroke-width="1.5" opacity="0.4" />
+  <circle cx="280" cy="26" r="2" fill="#00F0FF" />
+</svg>

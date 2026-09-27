@@ -4,6 +4,18 @@ import { AdminHeader } from '../components/AdminHeader.js';
 import { Footer } from '../components/Footer.js';
 import { useAuth } from '../context/AuthContext.js';
 import { apiUrl } from '../config/api.js';
+import {
+  GraduationCap,
+  CheckCircle2,
+  Calendar,
+  CalendarDays,
+  CheckCircle,
+  AlertCircle,
+  Sparkles,
+  ExternalLink,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 
 interface MentorItem {
   id: string;
@@ -130,8 +142,9 @@ export const AdminDashboardPage: React.FC = () => {
         </div>
 
         {error && (
-          <div className="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-2xl text-xs font-medium">
-            ⚠️ {error}
+          <div className="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-2xl text-xs font-medium flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-600" />
+            <span>{error}</span>
           </div>
         )}
 
@@ -154,8 +167,8 @@ export const AdminDashboardPage: React.FC = () => {
                   </span>
                   <span className="text-[11px] text-slate-500 mt-0.5 block">10 Registered Mentors</span>
                 </div>
-                <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-xl font-bold">
-                  👨‍🏫
+                <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
+                  <GraduationCap className="w-6 h-6" />
                 </div>
               </div>
 
@@ -171,8 +184,8 @@ export const AdminDashboardPage: React.FC = () => {
                     Max {activeMentors * 2} slots/day
                   </span>
                 </div>
-                <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-xl font-bold">
-                  ✓
+                <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
+                  <CheckCircle2 className="w-6 h-6" />
                 </div>
               </div>
 
@@ -187,14 +200,14 @@ export const AdminDashboardPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setIsCalendarModalOpen(true)}
-                    className="mt-2 px-2.5 py-1 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold text-[11px] rounded-lg shadow-sm transition-all flex items-center gap-1"
+                    className="mt-2 px-2.5 py-1 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold text-[11px] rounded-lg shadow-sm transition-all flex items-center gap-1.5"
                   >
-                    <span>📅</span>
+                    <Calendar className="w-3.5 h-3.5" />
                     <span>Calendar Slot Check</span>
                   </button>
                 </div>
-                <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-xl font-bold">
-                  📅
+                <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center">
+                  <CalendarDays className="w-6 h-6" />
                 </div>
               </div>
 
@@ -210,8 +223,8 @@ export const AdminDashboardPage: React.FC = () => {
                     {bookingsInMonth} in {selectedMonth}
                   </span>
                 </div>
-                <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-xl font-bold">
-                  🎯
+                <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6" />
                 </div>
               </div>
             </div>
@@ -241,10 +254,11 @@ export const AdminDashboardPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={handlePrevDay}
-                    className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-xs font-bold rounded-xl transition-colors"
+                    className="flex items-center gap-1 px-3 py-2 bg-slate-700 hover:bg-slate-600 text-xs font-bold rounded-xl transition-colors"
                     title="Previous Day"
                   >
-                    ◀ Prev
+                    <ChevronLeft className="w-4 h-4" />
+                    <span>Prev</span>
                   </button>
                   <input
                     type="date"
@@ -255,10 +269,11 @@ export const AdminDashboardPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleNextDay}
-                    className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-xs font-bold rounded-xl transition-colors"
+                    className="flex items-center gap-1 px-3 py-2 bg-slate-700 hover:bg-slate-600 text-xs font-bold rounded-xl transition-colors"
                     title="Next Day"
                   >
-                    Next ▶
+                    <span>Next</span>
+                    <ChevronRight className="w-4 h-4" />
                   </button>
                   <button
                     type="button"
@@ -337,7 +352,9 @@ export const AdminDashboardPage: React.FC = () => {
 
                 {bookingsOnDate.length === 0 ? (
                   <div className="py-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 p-6">
-                    <span className="text-3xl block mb-2">✨</span>
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-3">
+                      <Sparkles className="w-6 h-6" />
+                    </div>
                     <h4 className="text-sm font-extrabold text-slate-800">
                       0 Bookings on {selectedDate}
                     </h4>
@@ -385,9 +402,9 @@ export const AdminDashboardPage: React.FC = () => {
                                   href={b.classLink}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2.5 py-1 rounded-lg hover:bg-indigo-100 transition-colors"
+                                  className="inline-flex items-center gap-1.5 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2.5 py-1 rounded-lg hover:bg-indigo-100 transition-colors"
                                 >
-                                  <span>🔗</span>
+                                  <ExternalLink className="w-3.5 h-3.5" />
                                   <span>Join Class</span>
                                 </a>
                               ) : (
@@ -548,7 +565,7 @@ export const AdminDashboardPage: React.FC = () => {
             <div className="p-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">📅</span>
+                  <Calendar className="w-5 h-5 text-indigo-400" />
                   <h3 className="text-lg font-black tracking-tight">Date Availability & Slot Checker</h3>
                 </div>
                 <p className="text-xs text-slate-300 mt-0.5">
@@ -590,9 +607,10 @@ export const AdminDashboardPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleNextDay}
-                    className="px-3.5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded-xl transition-all"
+                    className="flex items-center gap-1 px-3.5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded-xl transition-all"
                   >
-                    Tomorrow ▶
+                    <span>Tomorrow</span>
+                    <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -660,7 +678,9 @@ export const AdminDashboardPage: React.FC = () => {
 
                 {bookingsOnDate.length === 0 ? (
                   <div className="py-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 p-4">
-                    <span className="text-2xl block mb-1">✨</span>
+                    <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-2">
+                      <Sparkles className="w-5 h-5" />
+                    </div>
                     <p className="text-xs font-bold text-slate-700">No bookings on {selectedDate}</p>
                     <p className="text-[11px] text-slate-500 mt-0.5">
                       All {maxDailyCapacity} demo class slots are 100% free and open for parents to book.
@@ -691,9 +711,10 @@ export const AdminDashboardPage: React.FC = () => {
                               href={b.classLink}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="px-2.5 py-1 bg-indigo-50 text-indigo-700 font-bold text-[11px] rounded-lg hover:bg-indigo-100 transition-colors"
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-indigo-50 text-indigo-700 font-bold text-[11px] rounded-lg hover:bg-indigo-100 transition-colors"
                             >
-                              🔗 Join Class
+                              <ExternalLink className="w-3.5 h-3.5" />
+                              <span>Join Class</span>
                             </a>
                           )}
                           <span

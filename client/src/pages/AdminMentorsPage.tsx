@@ -3,6 +3,7 @@ import { AdminHeader } from '../components/AdminHeader.js';
 import { Footer } from '../components/Footer.js';
 import { useAuth } from '../context/AuthContext.js';
 import { apiUrl } from '../config/api.js';
+import { RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface AdminMentor {
   id: string;
@@ -107,14 +108,17 @@ export const AdminMentorsPage: React.FC = () => {
             onClick={fetchMentors}
             className="self-start sm:self-auto px-4 py-2 bg-slate-200 text-slate-800 font-bold text-xs rounded-xl hover:bg-slate-300 transition-all flex items-center gap-1.5"
           >
-            <span>🔄</span>
+            <RefreshCw className="w-3.5 h-3.5" />
             <span>Refresh Mentors</span>
           </button>
         </div>
 
         {actionSuccess && (
           <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-2xl text-xs font-semibold flex items-center justify-between">
-            <span>✓ {actionSuccess}</span>
+            <span className="flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <span>{actionSuccess}</span>
+            </span>
             <button
               onClick={() => setActionSuccess(null)}
               className="text-emerald-600 hover:text-emerald-900 font-bold"
@@ -125,8 +129,9 @@ export const AdminMentorsPage: React.FC = () => {
         )}
 
         {error && (
-          <div className="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-2xl text-xs font-semibold">
-            ⚠️ {error}
+          <div className="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-2xl text-xs font-semibold flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-600" />
+            <span>{error}</span>
           </div>
         )}
 

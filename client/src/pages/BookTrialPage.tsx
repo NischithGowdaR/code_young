@@ -7,6 +7,7 @@ import { Header } from '../components/Header.js';
 import { Footer } from '../components/Footer.js';
 import { useAuth } from '../context/AuthContext.js';
 import { apiUrl } from '../config/api.js';
+import { CheckCircle2, Calendar, AlertCircle, ExternalLink, Check } from 'lucide-react';
 
 const TIMEZONES = [
   { value: 'America/New_York', label: 'US - Eastern Time (America/New_York)' },
@@ -437,8 +438,8 @@ export const BookTrialPage: React.FC = () => {
         {/* STEP 4: SUCCESSFUL BOOKING CONFIRMATION DISPLAY */}
         {bookingResult ? (
           <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-emerald-200 text-center animate-fadeIn">
-            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-sm">
-              ✓
+            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+              <CheckCircle2 className="w-10 h-10" />
             </div>
 
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
@@ -497,7 +498,7 @@ export const BookTrialPage: React.FC = () => {
                   Live Classroom Meeting Link
                 </span>
                 <div className="flex items-center gap-2 bg-indigo-50/80 p-3 rounded-xl border border-indigo-200">
-                  <span className="text-indigo-600 font-bold text-sm">🔗</span>
+                  <ExternalLink className="w-4 h-4 text-indigo-600 flex-shrink-0" />
                   <a
                     href={bookingResult.classLink}
                     target="_blank"
@@ -539,8 +540,9 @@ export const BookTrialPage: React.FC = () => {
                   <strong className="text-slate-800">{trialSession.parentPhone}</strong>
                 </p>
               </div>
-              <span className="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold text-xs rounded-full">
-                Phone Verified ✓
+              <span className="flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-800 font-bold text-xs rounded-full">
+                <Check className="w-3.5 h-3.5" />
+                <span>Phone Verified</span>
               </span>
             </div>
 
@@ -601,7 +603,7 @@ export const BookTrialPage: React.FC = () => {
             {bookingConflictError && (
               <div className="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-2xl text-xs font-medium flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-base">⚠️</span>
+                  <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
                   <span>{bookingConflictError}</span>
                 </div>
                 <button
@@ -635,7 +637,7 @@ export const BookTrialPage: React.FC = () => {
             ) : slots.length === 0 ? (
               /* No Available Slots State */
               <div className="py-10 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 p-6">
-                <span className="text-3xl block mb-2">📅</span>
+                <Calendar className="w-10 h-10 text-slate-400 mx-auto mb-2" />
                 <h3 className="text-sm font-extrabold text-slate-800">No Slots Available</h3>
                 <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
                   All mentors are fully booked or unavailable on {selectedDate} in{' '}
@@ -649,7 +651,7 @@ export const BookTrialPage: React.FC = () => {
                   }}
                   className="mt-4 px-4 py-2 bg-indigo-600 text-white font-bold text-xs rounded-xl hover:bg-indigo-700 transition-all"
                 >
-                  Check Next Available Day
+                  Check Next Day Availability
                 </button>
               </div>
             ) : (

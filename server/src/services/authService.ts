@@ -9,7 +9,14 @@ import {
   ACCESS_TOKEN_EXPIRY,
   REFRESH_TOKEN_EXPIRY_DAYS,
 } from '../config/jwt.js';
-import { RegisterInput, LoginInput, SendRegistrationOtpInput } from '../schemas/authSchemas.js';
+import {
+  RegisterInput,
+  LoginInput,
+  SendRegistrationOtpInput,
+  SendForgotPasswordOtpInput,
+  VerifyForgotPasswordOtpInput,
+  ResetPasswordInput,
+} from '../schemas/authSchemas.js';
 import { getEmailService } from './email/developmentEmailService.js';
 import { DevelopmentOtpService } from './otp/developmentOtpService.js';
 import { AppError } from '../utils/errors.js';
@@ -91,10 +98,11 @@ export const sendRegistrationOtp = async (data: SendRegistrationOtpInput) => {
 
   if (result.rawCode) {
     const emailService = getEmailService();
-    // Non-blocking dispatch so the client transitions to the OTP screen immediately (<100ms)
-    emailService.sendOtpEmail(normalizedEmail, data.name || 'Parent', result.rawCode).catch((err) => {
+    try {
+      await emailService.sendOtpEmail(normalizedEmail, data.name || 'Parent', result.rawCode);
+    } catch (err) {
       console.error('[EMAIL OTP DISPATCH ERROR]:', err);
-    });
+    }
   }
 
   return {
@@ -257,4 +265,130 @@ export const getUserById = async (userId: string) => {
   }
 
   return sanitizeUser(user);
+};
+
+export const sendForgotPasswordOtp = async (data: SendForgotPasswordOtpInput) => {
+  const normalizedEmail = data.email.toLowerCase().trim();
+
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+  });
+
+  if (!user) {
+    throw new AppError(
+      'No account found with this email address. Please make sure you have registered first.',
+      404,
+      'Not Found'
+    );
+  }
+
+  const otpService = new DevelopmentOtpService();
+  const result = await otpService.sendOtp(normalizedEmail, 'PASSWORD_RESET');
+
+  if (result.rawCode) {
+    const emailService = getEmailService();
+    try {
+      await emailService.sendPasswordResetOtpEmail(normalizedEmail, user.name, result.rawCode);
+    } catch (err) {
+      console.error('[PASSWORD RESET EMAIL ERROR]:', err);
+    }
+  }
+
+  return {
+    message: 'A 6-digit OTP has been sent to your email.',
+    cooldownSeconds: result.cooldownSeconds,
+  };
+};
+
+export const verifyForgotPasswordOtp = async (data: VerifyForgotPasswordOtpInput) => {
+  const normalizedEmail = data.email.toLowerCase().trim();
+
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+  });
+
+  if (!user) {
+    throw new AppError('No account found with this email address.', 404, 'Not Found');
+  }
+
+  const otpService = new DevelopmentOtpService();
+  await otpService.verifyOtp(normalizedEmail, 'PASSWORD_RESET', data.otpCode.trim());
+
+  // Generate a signed temporary reset token valid for 15 minutes
+  const resetToken = jwt.sign(
+    {
+      email: normalizedEmail,
+      userId: user.id,
+      purpose: 'PASSWORD_RESET',
+    },
+    JWT_SECRET,
+    { expiresIn: '15m' }
+  );
+
+  return {
+    message: 'OTP verified successfully.',
+    resetToken,
+  };
+};
+
+export const resetPasswordWithToken = async (data: ResetPasswordInput) => {
+  const normalizedEmail = data.email.toLowerCase().trim();
+
+  let decoded: { email: string; userId?: string; purpose: string };
+  try {
+    decoded = jwt.verify(data.resetToken, JWT_SECRET) as {
+      email: string;
+      userId?: string;
+      purpose: string;
+    };
+  } catch {
+    throw new AppError(
+      'Invalid or expired password reset session. Please request a new OTP.',
+      400,
+      'Bad Request'
+    );
+  }
+
+  if (
+    !decoded ||
+    decoded.purpose !== 'PASSWORD_RESET' ||
+    decoded.email.toLowerCase().trim() !== normalizedEmail
+  ) {
+    throw new AppError('Invalid password reset token.', 400, 'Bad Request');
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+  });
+
+  if (!user) {
+    throw new AppError('User not found.', 404, 'Not Found');
+  }
+
+  const passwordHash = await bcrypt.hash(data.newPassword, 10);
+
+  const updatedUser = await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordHash },
+  });
+
+  // Revoke all existing refresh tokens for this user for security
+  await prisma.refreshToken.updateMany({
+    where: { userId: user.id, revoked: false },
+    data: { revoked: true },
+  });
+
+  // Automatically generate fresh tokens so the user can be logged in
+  const { accessToken, refreshToken } = await generateTokens(
+    updatedUser.id,
+    updatedUser.email,
+    updatedUser.role
+  );
+
+  return {
+    message: 'Your password has been reset successfully.',
+    user: sanitizeUser(updatedUser),
+    accessToken,
+    refreshToken,
+  };
 };

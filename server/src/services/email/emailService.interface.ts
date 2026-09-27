@@ -34,6 +34,11 @@ export interface IEmailService {
     name: string,
     code: string
   ): Promise<{ success: boolean; messageId: string }>;
+  sendPasswordResetOtpEmail(
+    email: string,
+    name: string,
+    code: string
+  ): Promise<{ success: boolean; messageId: string }>;
   sendBookingConfirmation(
     params: BookingConfirmationEmailParams
   ): Promise<{ success: boolean; messageId: string }>;

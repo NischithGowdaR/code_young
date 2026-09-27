@@ -4,10 +4,16 @@
  * - Otherwise defaults to your live deployed Render backend: https://code-young.onrender.com
  */
 
+const isLocal =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.startsWith('192.168.'));
+
 const envUrl =
   typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_API_BASE_URL : undefined;
 
-const RAW_URL = envUrl || 'https://code-young.onrender.com';
+const RAW_URL = envUrl || (isLocal ? 'http://localhost:4000' : 'https://code-young.onrender.com');
 
 export const API_BASE_URL = RAW_URL.replace(/\/+$/, '');
 

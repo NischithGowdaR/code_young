@@ -1,5 +1,12 @@
 import express from 'express';
-import { registerSchema, loginSchema, sendRegistrationOtpSchema } from '../schemas/authSchemas.js';
+import {
+  registerSchema,
+  loginSchema,
+  sendRegistrationOtpSchema,
+  sendForgotPasswordOtpSchema,
+  verifyForgotPasswordOtpSchema,
+  resetPasswordSchema,
+} from '../schemas/authSchemas.js';
 import {
   registerUser,
   sendRegistrationOtp,
@@ -7,6 +14,9 @@ import {
   rotateRefreshToken,
   revokeRefreshToken,
   getUserById,
+  sendForgotPasswordOtp,
+  verifyForgotPasswordOtp,
+  resetPasswordWithToken,
 } from '../services/authService.js';
 import { authenticate } from '../middleware/authMiddleware.js';
 
@@ -187,6 +197,83 @@ authRouter.get(
 
       const user = await getUserById(req.user.userId);
       res.status(200).json({ user });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// POST /api/auth/forgot-password/send-otp
+authRouter.post(
+  '/forgot-password/send-otp',
+  async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    try {
+      const parseResult = sendForgotPasswordOtpSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        res.status(400).json({
+          error: 'Validation Error',
+          message: parseResult.error.errors.map((e) => e.message).join(', '),
+          details: parseResult.error.flatten(),
+        });
+        return;
+      }
+
+      const result = await sendForgotPasswordOtp(parseResult.data);
+      res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// POST /api/auth/forgot-password/verify-otp
+authRouter.post(
+  '/forgot-password/verify-otp',
+  async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    try {
+      const parseResult = verifyForgotPasswordOtpSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        res.status(400).json({
+          error: 'Validation Error',
+          message: parseResult.error.errors.map((e) => e.message).join(', '),
+          details: parseResult.error.flatten(),
+        });
+        return;
+      }
+
+      const result = await verifyForgotPasswordOtp(parseResult.data);
+      res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// POST /api/auth/forgot-password/reset-password
+authRouter.post(
+  '/forgot-password/reset-password',
+  async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    try {
+      const parseResult = resetPasswordSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        res.status(400).json({
+          error: 'Validation Error',
+          message: parseResult.error.errors.map((e) => e.message).join(', '),
+          details: parseResult.error.flatten(),
+        });
+        return;
+      }
+
+      const { user, accessToken, refreshToken, message } = await resetPasswordWithToken(
+        parseResult.data
+      );
+      setRefreshTokenCookie(res, refreshToken);
+
+      res.status(200).json({
+        message,
+        user,
+        accessToken,
+      });
     } catch (err) {
       next(err);
     }

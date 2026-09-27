@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Code2, Calculator, FlaskConical, MessageSquare, Check, Sparkles } from 'lucide-react';
 
 export const HeroSection: React.FC = () => {
   return (
@@ -102,34 +103,45 @@ export const HeroSection: React.FC = () => {
                   <span className="text-indigo-400">futureLeader</span>.
                   <span className="text-emerald-300">learn</span>(['Coding', 'Math', 'Science']);
                 </div>
-                <div className="text-emerald-400 font-bold">// Status: Ready to Launch! 🚀</div>
+                <div className="text-emerald-400 font-bold flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <span>// Status: Ready to Launch!</span>
+                </div>
               </div>
 
               {/* Subject Badges */}
               <div className="grid grid-cols-2 gap-3 z-10 my-4">
-                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 text-white flex items-center gap-2">
-                  <span className="text-xl">💻</span>
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 text-white flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/40 flex items-center justify-center">
+                    <Code2 className="w-5 h-5 text-indigo-200" />
+                  </div>
                   <div>
                     <div className="text-xs font-bold">Coding</div>
                     <div className="text-[10px] text-white/80">Python & AI</div>
                   </div>
                 </div>
-                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 text-white flex items-center gap-2">
-                  <span className="text-xl">📐</span>
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 text-white flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/40 flex items-center justify-center">
+                    <Calculator className="w-5 h-5 text-amber-200" />
+                  </div>
                   <div>
                     <div className="text-xs font-bold">STEM Math</div>
                     <div className="text-[10px] text-white/80">Mental & Logic</div>
                   </div>
                 </div>
-                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 text-white flex items-center gap-2">
-                  <span className="text-xl">🔬</span>
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 text-white flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/40 flex items-center justify-center">
+                    <FlaskConical className="w-5 h-5 text-emerald-200" />
+                  </div>
                   <div>
                     <div className="text-xs font-bold">Science</div>
                     <div className="text-[10px] text-white/80">Hands-on Labs</div>
                   </div>
                 </div>
-                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 text-white flex items-center gap-2">
-                  <span className="text-xl">🗣️</span>
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 text-white flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-violet-500/40 flex items-center justify-center">
+                    <MessageSquare className="w-5 h-5 text-violet-200" />
+                  </div>
                   <div>
                     <div className="text-xs font-bold">English</div>
                     <div className="text-[10px] text-white/80">Public Speaking</div>
@@ -140,8 +152,8 @@ export const HeroSection: React.FC = () => {
               {/* Floating Achievement Banner */}
               <div className="bg-white text-slate-900 rounded-xl p-3 shadow-lg flex items-center justify-between z-10">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm">
-                    ✓
+                  <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                    <Check className="w-4 h-4 font-bold" />
                   </div>
                   <div>
                     <div className="text-xs font-bold">1-on-1 Free Class</div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Header } from '../components/Header.js';
 import { Footer } from '../components/Footer.js';
+import { Calculator } from 'lucide-react';
 
 export const MathPage: React.FC = () => {
   return (
@@ -8,8 +9,8 @@ export const MathPage: React.FC = () => {
       <Header />
       <main className="flex-grow flex items-center justify-center p-6">
         <div className="max-w-lg w-full bg-white p-8 rounded-2xl shadow-md border border-slate-200 text-center space-y-4">
-          <div className="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-2xl mx-auto">
-            📐
+          <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto shadow-sm">
+            <Calculator className="w-7 h-7" />
           </div>
           <h1 className="text-3xl font-bold text-slate-900">STEM Mathematics Course</h1>
           <p className="text-sm text-slate-600">

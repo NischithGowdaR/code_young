@@ -8,7 +8,7 @@ export interface CourseCardProps {
   highlights: string[];
   path: string;
   badge: string;
-  icon: string;
+  icon: React.ReactNode;
 }
 
 export const CourseCard: React.FC<CourseCardProps> = ({
@@ -24,7 +24,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group">
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+          <div className="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
             {icon}
           </div>
           <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">

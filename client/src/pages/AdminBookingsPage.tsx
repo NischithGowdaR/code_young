@@ -3,6 +3,7 @@ import { AdminHeader } from '../components/AdminHeader.js';
 import { Footer } from '../components/Footer.js';
 import { useAuth } from '../context/AuthContext.js';
 import { apiUrl } from '../config/api.js';
+import { Calendar, RefreshCw, CheckCircle2, AlertCircle, AlertTriangle } from 'lucide-react';
 
 interface AdminBooking {
   id: string;
@@ -139,7 +140,7 @@ export const AdminBookingsPage: React.FC = () => {
           <div className="flex flex-wrap items-center gap-3">
             {/* Date Filter */}
             <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-slate-300">
-              <span className="text-xs text-slate-400 font-bold">📅</span>
+              <Calendar className="w-3.5 h-3.5 text-slate-400" />
               <input
                 type="date"
                 value={filterDate}
@@ -173,7 +174,7 @@ export const AdminBookingsPage: React.FC = () => {
               onClick={fetchBookings}
               className="px-4 py-2 bg-slate-200 text-slate-800 font-bold text-xs rounded-xl hover:bg-slate-300 transition-all flex items-center gap-1.5"
             >
-              <span>🔄</span>
+              <RefreshCw className="w-3.5 h-3.5" />
               <span>Refresh</span>
             </button>
           </div>
@@ -181,7 +182,10 @@ export const AdminBookingsPage: React.FC = () => {
 
         {actionSuccess && (
           <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-2xl text-xs font-semibold flex items-center justify-between">
-            <span>✓ {actionSuccess}</span>
+            <span className="flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <span>{actionSuccess}</span>
+            </span>
             <button
               onClick={() => setActionSuccess(null)}
               className="text-emerald-600 hover:text-emerald-900 font-bold"
@@ -192,8 +196,9 @@ export const AdminBookingsPage: React.FC = () => {
         )}
 
         {error && (
-          <div className="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-2xl text-xs font-semibold">
-            ⚠️ {error}
+          <div className="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-2xl text-xs font-semibold flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-600" />
+            <span>{error}</span>
           </div>
         )}
 
@@ -311,8 +316,8 @@ export const AdminBookingsPage: React.FC = () => {
         {cancellingBooking && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fadeIn">
             <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-200 space-y-4">
-              <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-xl mx-auto">
-                ⚠️
+              <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+                <AlertTriangle className="w-6 h-6" />
               </div>
 
               <div className="text-center">

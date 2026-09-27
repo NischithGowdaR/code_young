@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header.js';
 import { Footer } from '../components/Footer.js';
 import { useAuth } from '../context/AuthContext.js';
+import { KeyRound } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -41,8 +42,8 @@ export const LoginPage: React.FC = () => {
       <main className="flex-grow flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
           <div className="text-center mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-2xl mx-auto mb-3 font-bold">
-              🔑
+            <div className="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mx-auto mb-3 shadow-sm">
+              <KeyRound className="w-7 h-7" />
             </div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome Back</h1>
             <p className="text-xs text-slate-500 mt-1">Sign in to your CodeYoung account</p>
@@ -71,9 +72,17 @@ export const LoginPage: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-xs font-semibold text-slate-700 mb-1">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label htmlFor="password" className="block text-xs font-semibold text-slate-700">
+                  Password
+                </label>
+                <Link
+                  to="/forgot-password"
+                  className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                >
+                  Forgot Password?
+                </Link>
+              </div>
               <input
                 id="password"
                 type="password"

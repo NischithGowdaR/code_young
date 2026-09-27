@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.js';
+import { Shield, LayoutDashboard } from 'lucide-react';
 
 export const MobileMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -118,18 +119,20 @@ export const MobileMenu: React.FC = () => {
                   <Link
                     to="/admin"
                     onClick={closeMenu}
-                    className="block text-center px-4 py-2.5 bg-purple-100 text-purple-700 font-bold text-sm rounded-xl hover:bg-purple-200 border border-purple-300"
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-100 text-purple-700 font-bold text-sm rounded-xl hover:bg-purple-200 border border-purple-300"
                   >
-                    🛡️ Admin Portal
+                    <Shield className="w-4 h-4" />
+                    <span>Admin Portal</span>
                   </Link>
                 ) : (
                   <>
                     <Link
                       to="/dashboard"
                       onClick={closeMenu}
-                      className="block text-center px-4 py-2.5 bg-indigo-50 text-indigo-700 font-bold text-sm rounded-xl hover:bg-indigo-100 border border-indigo-200"
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-50 text-indigo-700 font-bold text-sm rounded-xl hover:bg-indigo-100 border border-indigo-200"
                     >
-                      📊 Parent Dashboard
+                      <LayoutDashboard className="w-4 h-4" />
+                      <span>Parent Dashboard</span>
                     </Link>
                     <Link
                       to="/book"

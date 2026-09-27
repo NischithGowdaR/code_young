@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import { HomePage } from './pages/HomePage.js';
 import { LoginPage } from './pages/LoginPage.js';
 import { RegisterPage } from './pages/RegisterPage.js';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage.js';
 import { BookTrialPage } from './pages/BookTrialPage.js';
 import { MathPage } from './pages/MathPage.js';
 import { CodingPage } from './pages/CodingPage.js';
@@ -23,6 +24,7 @@ export const App: React.FC = () => {
       <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/courses/math" element={<MathPage />} />
       <Route path="/courses/coding" element={<CodingPage />} />
       <Route path="/courses/english" element={<EnglishPage />} />
