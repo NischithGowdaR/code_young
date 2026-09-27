@@ -150,7 +150,6 @@ export const SAMPLE_BLOG_POSTS: BlogPost[] = [
 export const BlogSection: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<string>('All Articles');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [currentPage, setCurrentPage] = useState<number>(1);
 
   const filteredPosts = useMemo(() => {
     return SAMPLE_BLOG_POSTS.filter((post) => {
@@ -197,7 +196,6 @@ export const BlogSection: React.FC = () => {
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
-                setCurrentPage(1);
               }}
               placeholder="Search articles by topic, skill, or educator..."
               className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all shadow-xs"
@@ -223,7 +221,6 @@ export const BlogSection: React.FC = () => {
                   type="button"
                   onClick={() => {
                     setActiveCategory(category);
-                    setCurrentPage(1);
                   }}
                   className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${
                     isActive
@@ -330,51 +327,6 @@ export const BlogSection: React.FC = () => {
             ))}
           </div>
         )}
-
-        {/* 5. Pagination / Load More */}
-        <div className="flex items-center justify-center gap-2 mb-20">
-          <button
-            type="button"
-            onClick={() => setCurrentPage(1)}
-            className={`w-10 h-10 rounded-xl text-xs font-bold transition-colors ${
-              currentPage === 1
-                ? 'bg-indigo-600 text-white shadow-md'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            1
-          </button>
-          <button
-            type="button"
-            onClick={() => setCurrentPage(2)}
-            className={`w-10 h-10 rounded-xl text-xs font-bold transition-colors ${
-              currentPage === 2
-                ? 'bg-indigo-600 text-white shadow-md'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            2
-          </button>
-          <button
-            type="button"
-            onClick={() => setCurrentPage(3)}
-            className={`w-10 h-10 rounded-xl text-xs font-bold transition-colors ${
-              currentPage === 3
-                ? 'bg-indigo-600 text-white shadow-md'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            3
-          </button>
-          <span className="px-2 text-slate-400 text-sm font-bold">&hellip;</span>
-          <button
-            type="button"
-            onClick={() => setCurrentPage(30)}
-            className="w-10 h-10 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
-          >
-            30
-          </button>
-        </div>
 
         {/* 6. Bottom CTA Section */}
         <div className="max-w-5xl mx-auto rounded-3xl bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-900 text-white p-8 sm:p-12 shadow-2xl relative overflow-hidden border border-indigo-800/40">
