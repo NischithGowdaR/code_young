@@ -6,6 +6,7 @@
  */
 
 import { useState, useCallback, useRef } from 'react';
+import { apiUrl } from '../../config/api.js';
 
 export type MessageRole = 'user' | 'assistant';
 
@@ -37,8 +38,6 @@ export interface ChatAction {
     slots?: any[];
   };
 }
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000/api';
 
 export function useChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -75,7 +74,7 @@ export function useChat() {
         body['conversationId'] = conversationIdRef.current;
       }
 
-      const res = await fetch(`${API_BASE}/chat`, {
+      const res = await fetch(apiUrl('/api/chat'), {
         method: 'POST',
         headers,
         credentials: 'include',
