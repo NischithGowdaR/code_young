@@ -158,7 +158,7 @@ npm run dev
 | **📊 Parent Dashboard** | `http://localhost:5173/dashboard` | Manage booked classes, student info & virtual class links | *Parent Only* |
 | **🔑 Parent Login** | `http://localhost:5173/login` | Secure JWT login (auto-redirects to dashboard) | *Public* |
 | **📝 Parent Register** | `http://localhost:5173/register` | Sign up with email OTP verification | *Public* |
-| **🛡️ Admin Portal** | `http://localhost:5173/admin` | Live metrics, daily capacity meter & bookings review | `admin@codeyoung.example` / `AdminSecurePassword123!` |
+| **🛡️ Admin Portal** | `http://localhost:5173/admin` | Live metrics, daily capacity meter & bookings review | *Admin Only* |
 | **👨‍🏫 Admin Mentors** | `http://localhost:5173/admin/mentors` | Toggle active mentors & inspect daily 2-class limits | *Admin Only* |
 | **📋 Admin Bookings** | `http://localhost:5173/admin/bookings` | View full schedule, copy class links & cancel classes | *Admin Only* |
 | **🚀 Backend API** | `http://localhost:4000/api` | REST API health check (`/api/health`) | *Service* |
@@ -238,10 +238,10 @@ VITE_API_BASE_URL=http://localhost:4000/api
 # Database
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/codeyoung_dev?schema=public
 
-# Default Admin Credentials
-ADMIN_EMAIL=admin@codeyoung.example
-ADMIN_PASSWORD=AdminSecurePassword123!
-ADMIN_NAME=CodeYoung Admin
+# Admin Initialization (Set your own secure credentials in .env)
+ADMIN_EMAIL=your_admin_email@example.com
+ADMIN_PASSWORD=your_secure_password
+ADMIN_NAME=Admin
 
 # Email / Brevo API / SMTP
 BREVO_API_KEY=xkeysib-...
