@@ -33,6 +33,7 @@ export interface AdminBookingResponse {
   mentorEmail: string;
   classLink: string | null;
   status: string;
+  isExpired?: boolean;
   createdAt: string;
 }
 
@@ -147,6 +148,7 @@ export async function getBookingsAdmin(): Promise<AdminBookingResponse[]> {
 
   return bookings.map((b) => {
     const startDt = parseToUtcDateTime(b.startUtc);
+    const endDt = parseToUtcDateTime(b.endUtc);
     const parentLocalDt = startDt.isValid ? startDt.setZone(b.parentTimezone) : DateTime.invalid('Invalid timezone');
     const mentorLocalDt = startDt.isValid ? startDt.setZone(b.mentorTimezoneSnapshot) : DateTime.invalid('Invalid timezone');
 
@@ -157,6 +159,9 @@ export async function getBookingsAdmin(): Promise<AdminBookingResponse[]> {
     const mentorLocalDisplay = mentorLocalDt.isValid
       ? mentorLocalDt.toFormat('yyyy-MM-dd HH:mm ZZZZ')
       : b.startUtc.toISOString();
+
+    const nowUtc = DateTime.utc();
+    const isExpired = b.status === 'CONFIRMED' && (endDt.isValid ? endDt < nowUtc : startDt < nowUtc);
 
     return {
       id: b.id,
@@ -176,6 +181,7 @@ export async function getBookingsAdmin(): Promise<AdminBookingResponse[]> {
       mentorEmail: b.mentor ? b.mentor.email : 'N/A',
       classLink: b.classLink,
       status: b.status,
+      isExpired,
       createdAt: b.createdAt.toISOString(),
     };
   });

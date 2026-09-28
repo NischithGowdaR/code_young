@@ -290,9 +290,17 @@ export const DashboardPage: React.FC = () => {
                     <div className="divide-y divide-slate-100">
                       {data.previousBookings.map((b) => (
                         <div key={b.id} className="py-3 flex items-center justify-between">
-                          <div className="text-sm font-semibold text-slate-800">{b.course}</div>
-                          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-                            {b.status}
+                          <div className="text-sm font-semibold text-slate-800">
+                            {b.course} ({b.studentGrade})
+                          </div>
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                              b.status === 'CANCELLED'
+                                ? 'bg-rose-100 text-rose-800'
+                                : 'bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            {b.status === 'CONFIRMED' ? 'EXPIRED' : b.status}
                           </span>
                         </div>
                       ))}

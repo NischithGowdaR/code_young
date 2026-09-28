@@ -34,13 +34,23 @@ interface BookingItem {
   course: string;
   studentGrade: string;
   startUtc?: string;
+  endUtc?: string;
   parentLocalDisplay: string;
   mentorLocalDisplay: string;
   mentorName: string;
   classLink: string | null;
   status: string;
+  isExpired?: boolean;
   createdAt: string;
 }
+
+const checkIfExpired = (b: BookingItem): boolean => {
+  if (b.isExpired !== undefined) return b.isExpired;
+  if (b.status === 'CANCELLED') return false;
+  const timeStr = b.endUtc || b.startUtc;
+  if (!timeStr) return false;
+  return new Date(timeStr).getTime() < Date.now();
+};
 
 export const AdminDashboardPage: React.FC = () => {
   const { accessToken } = useAuth();
@@ -425,15 +435,21 @@ export const AdminDashboardPage: React.FC = () => {
                               )}
                             </td>
                             <td className="px-5 py-3.5">
-                              <span
-                                className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
-                                  b.status === 'CONFIRMED'
-                                    ? 'bg-emerald-100 text-emerald-800'
-                                    : 'bg-rose-100 text-rose-800'
-                                }`}
-                              >
-                                {b.status}
-                              </span>
+                              {b.status === 'CANCELLED' ? (
+                                <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800">
+                                  CANCELLED
+                                </span>
+                              ) : checkIfExpired(b) ? (
+                                <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-300 inline-flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                                  <span>EXPIRED</span>
+                                </span>
+                              ) : (
+                                <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 inline-flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                  <span>CONFIRMED</span>
+                                </span>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -545,15 +561,21 @@ export const AdminDashboardPage: React.FC = () => {
                           </td>
                           <td className="px-6 py-4 font-medium text-slate-800">{b.mentorName}</td>
                           <td className="px-6 py-4">
-                            <span
-                              className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
-                                b.status === 'CONFIRMED'
-                                  ? 'bg-emerald-100 text-emerald-800'
-                                  : 'bg-rose-100 text-rose-800'
-                              }`}
-                            >
-                              {b.status}
-                            </span>
+                            {b.status === 'CANCELLED' ? (
+                              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800">
+                                CANCELLED
+                              </span>
+                            ) : checkIfExpired(b) ? (
+                              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-300 inline-flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                                <span>EXPIRED</span>
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 inline-flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                <span>CONFIRMED</span>
+                              </span>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -730,15 +752,21 @@ export const AdminDashboardPage: React.FC = () => {
                               <span>Join Class</span>
                             </a>
                           )}
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                              b.status === 'CONFIRMED'
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : 'bg-rose-100 text-rose-800'
-                            }`}
-                          >
-                            {b.status}
-                          </span>
+                          {b.status === 'CANCELLED' ? (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">
+                              CANCELLED
+                            </span>
+                          ) : checkIfExpired(b) ? (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-300 inline-flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                              <span>EXPIRED</span>
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 inline-flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              <span>CONFIRMED</span>
+                            </span>
+                          )}
                         </div>
                       </div>
                     ))}

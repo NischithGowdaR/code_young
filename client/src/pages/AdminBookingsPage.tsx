@@ -23,14 +23,23 @@ interface AdminBooking {
   mentorEmail: string;
   classLink: string | null;
   status: string;
+  isExpired?: boolean;
   createdAt: string;
 }
+
+const checkIfExpired = (b: AdminBooking): boolean => {
+  if (b.isExpired !== undefined) return b.isExpired;
+  if (b.status === 'CANCELLED') return false;
+  const timeStr = b.endUtc || b.startUtc;
+  if (!timeStr) return false;
+  return new Date(timeStr).getTime() < Date.now();
+};
 
 export const AdminBookingsPage: React.FC = () => {
   const { accessToken } = useAuth();
 
   const [bookings, setBookings] = useState<AdminBooking[]>([]);
-  const [filterStatus, setFilterStatus] = useState<'ALL' | 'CONFIRMED' | 'CANCELLED'>('ALL');
+  const [filterStatus, setFilterStatus] = useState<'ALL' | 'UPCOMING' | 'EXPIRED' | 'CANCELLED'>('ALL');
   const [filterDate, setFilterDate] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -113,11 +122,16 @@ export const AdminBookingsPage: React.FC = () => {
   };
 
   const filteredBookings = bookings.filter((b) => {
-    if (filterStatus !== 'ALL' && b.status !== filterStatus) return false;
+    const isExpired = checkIfExpired(b);
+    if (filterStatus === 'UPCOMING' && (b.status !== 'CONFIRMED' || isExpired)) return false;
+    if (filterStatus === 'EXPIRED' && (!isExpired || b.status === 'CANCELLED')) return false;
+    if (filterStatus === 'CANCELLED' && b.status !== 'CANCELLED') return false;
+
     if (filterDate) {
-      const startStr = b.parentLocalDisplay || b.mentorLocalDisplay || b.createdAt || '';
-      const datePart = b.createdAt ? b.createdAt.split('T')[0] : '';
-      if (datePart !== filterDate && !startStr.includes(filterDate)) {
+      const parentDate = b.parentLocalDisplay ? b.parentLocalDisplay.slice(0, 10) : '';
+      const mentorDate = b.mentorLocalDisplay ? b.mentorLocalDisplay.slice(0, 10) : '';
+      const utcDate = b.startUtc ? b.startUtc.slice(0, 10) : '';
+      if (parentDate !== filterDate && mentorDate !== filterDate && utcDate !== filterDate) {
         return false;
       }
     }
@@ -165,11 +179,12 @@ export const AdminBookingsPage: React.FC = () => {
             {/* Status Filter Dropdown */}
             <select
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value as 'ALL' | 'CONFIRMED' | 'CANCELLED')}
+              onChange={(e) => setFilterStatus(e.target.value as 'ALL' | 'UPCOMING' | 'EXPIRED' | 'CANCELLED')}
               className="px-3 py-2 text-xs font-bold rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="ALL">Filter: All Statuses ({bookings.length})</option>
-              <option value="CONFIRMED">Filter: Confirmed Only</option>
+              <option value="UPCOMING">Filter: Upcoming / Confirmed</option>
+              <option value="EXPIRED">Filter: Expired / Past Classes</option>
               <option value="CANCELLED">Filter: Cancelled Only</option>
             </select>
 
@@ -285,26 +300,34 @@ export const AdminBookingsPage: React.FC = () => {
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-[11px] font-extrabold inline-block ${
-                            b.status === 'CONFIRMED'
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-rose-100 text-rose-800'
-                          }`}
-                        >
-                          {b.status}
-                        </span>
+                        {b.status === 'CANCELLED' ? (
+                          <span className="px-3 py-1 rounded-full text-[11px] font-extrabold inline-block bg-rose-100 text-rose-800">
+                            CANCELLED
+                          </span>
+                        ) : checkIfExpired(b) ? (
+                          <span className="px-3 py-1 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 border border-slate-300">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                            <span>EXPIRED</span>
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            <span>CONFIRMED</span>
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        {b.status === 'CONFIRMED' ? (
+                        {b.status === 'CANCELLED' ? (
+                          <span className="text-slate-400 text-xs font-semibold">Cancelled</span>
+                        ) : checkIfExpired(b) ? (
+                          <span className="text-slate-400 text-xs font-medium italic">Class Ended</span>
+                        ) : (
                           <button
                             onClick={() => setCancellingBooking(b)}
                             className="px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 font-bold text-xs rounded-xl transition-all shadow-sm"
                           >
                             Cancel Booking
                           </button>
-                        ) : (
-                          <span className="text-slate-400 text-xs font-semibold">Cancelled</span>
                         )}
                       </td>
                     </tr>
