@@ -15,6 +15,7 @@ import { parentRouter } from './controllers/parentController.js';
 import { availabilityRouter } from './controllers/availabilityController.js';
 import { bookingRouter } from './controllers/bookingController.js';
 import { adminRouter } from './controllers/adminController.js';
+import { chatRouter } from './modules/chat/chat.routes.js';
 import { authenticate, requireAdmin } from './middleware/authMiddleware.js';
 import { AppError } from './utils/errors.js';
 
@@ -72,6 +73,7 @@ app.use('/api/parent', parentRouter);
 app.use('/api/availability', availabilityRouter);
 app.use('/api/bookings', bookingRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/chat', chatRouter);
 
 // Health Endpoint
 app.get('/api/health', (_req: Request, res: Response) => {

@@ -46,6 +46,7 @@ interface AuthContextType {
   ) => Promise<{ message: string; user: User }>;
   logout: () => Promise<void>;
   clearError: () => void;
+  setAuthSession: (user: User, token: string, refreshToken?: string | null) => void;
 }
 
 const STORAGE_ACCESS_TOKEN_KEY = 'cy_access_token';
@@ -420,6 +421,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         resetPassword,
         logout,
         clearError,
+        setAuthSession: persistSession,
       }}
     >
       {children}
