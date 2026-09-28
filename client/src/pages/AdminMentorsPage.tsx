@@ -179,15 +179,26 @@ export const AdminMentorsPage: React.FC = () => {
                           {m.maxDailyBookings} classes / day
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex flex-col gap-1">
+                            <div className="flex flex-col gap-1">
                             <span
-                              className={`font-black text-xs px-2.5 py-1 rounded-lg w-fit ${
-                                m.dailyBookingCount >= m.maxDailyBookings
+                              className={`font-black text-xs px-2.5 py-1 rounded-lg w-fit inline-flex items-center gap-1.5 ${
+                                m.dailyBookingCount >= (m.maxDailyBookings || 2)
+                                  ? 'bg-rose-100 text-rose-800'
+                                  : m.dailyBookingCount === 1
                                   ? 'bg-amber-100 text-amber-800'
-                                  : 'bg-slate-100 text-slate-700'
+                                  : 'bg-emerald-50 text-emerald-800'
                               }`}
                             >
-                              {m.dailyBookingCount} / {m.maxDailyBookings} today
+                              <span>
+                                {m.dailyBookingCount} / {m.maxDailyBookings || 2} today
+                              </span>
+                              <span className="text-[10px] font-bold opacity-80">
+                                {m.dailyBookingCount >= (m.maxDailyBookings || 2)
+                                  ? '(Full)'
+                                  : m.dailyBookingCount === 1
+                                  ? '(1 slot left)'
+                                  : '(2 free)'}
+                              </span>
                             </span>
                             {typeof m.totalBookingsCount === 'number' && (
                               <span className="text-[11px] text-slate-500 font-medium">

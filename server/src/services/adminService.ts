@@ -36,6 +36,13 @@ export interface AdminBookingResponse {
   createdAt: string;
 }
 
+function parseToUtcDateTime(dateVal: Date | string): DateTime {
+  if (dateVal instanceof Date) {
+    return DateTime.fromJSDate(dateVal, { zone: 'utc' });
+  }
+  return DateTime.fromISO(String(dateVal), { zone: 'utc' });
+}
+
 /**
  * Fetch all mentors with active status, timezone, max daily limit, and current daily booking count.
  */
@@ -52,12 +59,16 @@ export async function getMentorsAdmin(): Promise<AdminMentorResponse[]> {
   return mentors.map((m) => {
     // Count active non-cancelled bookings for today in mentor's local timezone
     const nowMentor = DateTime.utc().setZone(m.timezone);
-    const todayStr = nowMentor.toFormat('yyyy-MM-dd');
+    const todayStr = nowMentor.isValid ? nowMentor.toFormat('yyyy-MM-dd') : DateTime.utc().toFormat('yyyy-MM-dd');
 
     const dailyBookingCount = m.bookings.filter((b) => {
-      const bMentorDt = DateTime.fromJSDate(b.startUtc, { zone: 'utc' }).setZone(m.timezone);
-      return bMentorDt.toFormat('yyyy-MM-dd') === todayStr;
+      const bUtc = parseToUtcDateTime(b.startUtc);
+      if (!bUtc.isValid) return false;
+      const bMentorDt = bUtc.setZone(m.timezone);
+      return bMentorDt.isValid && bMentorDt.toFormat('yyyy-MM-dd') === todayStr;
     }).length;
+
+    const maxDaily = m.maxDailyBookings && m.maxDailyBookings > 0 ? m.maxDailyBookings : 2;
 
     return {
       id: m.id,
@@ -65,7 +76,7 @@ export async function getMentorsAdmin(): Promise<AdminMentorResponse[]> {
       email: m.email,
       timezone: m.timezone,
       active: m.active,
-      maxDailyBookings: m.maxDailyBookings,
+      maxDailyBookings: maxDaily,
       dailyBookingCount,
       totalBookingsCount: m.bookings.length,
       createdAt: m.createdAt.toISOString(),
@@ -99,11 +110,15 @@ export async function toggleMentorStatusAdmin(
   });
 
   const nowMentor = DateTime.utc().setZone(updated.timezone);
-  const todayStr = nowMentor.toFormat('yyyy-MM-dd');
+  const todayStr = nowMentor.isValid ? nowMentor.toFormat('yyyy-MM-dd') : DateTime.utc().toFormat('yyyy-MM-dd');
   const dailyBookingCount = updated.bookings.filter((b) => {
-    const bMentorDt = DateTime.fromJSDate(b.startUtc, { zone: 'utc' }).setZone(updated.timezone);
-    return bMentorDt.toFormat('yyyy-MM-dd') === todayStr;
+    const bUtc = parseToUtcDateTime(b.startUtc);
+    if (!bUtc.isValid) return false;
+    const bMentorDt = bUtc.setZone(updated.timezone);
+    return bMentorDt.isValid && bMentorDt.toFormat('yyyy-MM-dd') === todayStr;
   }).length;
+
+  const maxDaily = updated.maxDailyBookings && updated.maxDailyBookings > 0 ? updated.maxDailyBookings : 2;
 
   return {
     id: updated.id,
@@ -111,7 +126,7 @@ export async function toggleMentorStatusAdmin(
     email: updated.email,
     timezone: updated.timezone,
     active: updated.active,
-    maxDailyBookings: updated.maxDailyBookings,
+    maxDailyBookings: maxDaily,
     dailyBookingCount,
     totalBookingsCount: updated.bookings.length,
     createdAt: updated.createdAt.toISOString(),
@@ -131,9 +146,9 @@ export async function getBookingsAdmin(): Promise<AdminBookingResponse[]> {
   });
 
   return bookings.map((b) => {
-    const startDt = DateTime.fromJSDate(b.startUtc, { zone: 'utc' });
-    const parentLocalDt = startDt.setZone(b.parentTimezone);
-    const mentorLocalDt = startDt.setZone(b.mentorTimezoneSnapshot);
+    const startDt = parseToUtcDateTime(b.startUtc);
+    const parentLocalDt = startDt.isValid ? startDt.setZone(b.parentTimezone) : DateTime.invalid('Invalid timezone');
+    const mentorLocalDt = startDt.isValid ? startDt.setZone(b.mentorTimezoneSnapshot) : DateTime.invalid('Invalid timezone');
 
     const parentLocalDisplay = parentLocalDt.isValid
       ? parentLocalDt.toFormat('yyyy-MM-dd HH:mm ZZZZ')

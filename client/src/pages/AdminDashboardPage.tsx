@@ -24,6 +24,7 @@ interface MentorItem {
   timezone: string;
   active: boolean;
   dailyBookingCount: number;
+  maxDailyBookings?: number;
 }
 
 interface BookingItem {
@@ -32,6 +33,7 @@ interface BookingItem {
   parentEmail: string;
   course: string;
   studentGrade: string;
+  startUtc?: string;
   parentLocalDisplay: string;
   mentorLocalDisplay: string;
   mentorName: string;
@@ -96,9 +98,14 @@ export const AdminDashboardPage: React.FC = () => {
   // Compute daily metrics for selectedDate
   const maxDailyCapacity = activeMentors * 2; // 20 when 10 active mentors
   const bookingsOnDate = bookings.filter((b) => {
-    const startStr = b.parentLocalDisplay || b.mentorLocalDisplay || b.createdAt || '';
-    const datePart = b.createdAt ? b.createdAt.split('T')[0] : '';
-    return datePart === selectedDate || startStr.includes(selectedDate);
+    const parentDate = b.parentLocalDisplay ? b.parentLocalDisplay.slice(0, 10) : '';
+    const mentorDate = b.mentorLocalDisplay ? b.mentorLocalDisplay.slice(0, 10) : '';
+    const utcDate = b.startUtc ? b.startUtc.slice(0, 10) : '';
+    return (
+      parentDate === selectedDate ||
+      mentorDate === selectedDate ||
+      utcDate === selectedDate
+    );
   });
   const confirmedOnDate = bookingsOnDate.filter((b) => b.status === 'CONFIRMED').length;
   const remainingSlotsOnDate = Math.max(0, maxDailyCapacity - confirmedOnDate);
@@ -107,9 +114,14 @@ export const AdminDashboardPage: React.FC = () => {
   // Month summary
   const selectedMonth = selectedDate.slice(0, 7); // YYYY-MM
   const bookingsInMonth = bookings.filter((b) => {
-    const datePart = b.createdAt ? b.createdAt.slice(0, 7) : '';
-    const displayPart = b.parentLocalDisplay || '';
-    return datePart === selectedMonth || displayPart.includes(selectedMonth);
+    const parentMonth = b.parentLocalDisplay ? b.parentLocalDisplay.slice(0, 7) : '';
+    const mentorMonth = b.mentorLocalDisplay ? b.mentorLocalDisplay.slice(0, 7) : '';
+    const utcMonth = b.startUtc ? b.startUtc.slice(0, 7) : '';
+    return (
+      parentMonth === selectedMonth ||
+      mentorMonth === selectedMonth ||
+      utcMonth === selectedMonth
+    );
   }).length;
 
   const handlePrevDay = () => {
