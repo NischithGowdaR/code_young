@@ -1,36 +1,114 @@
-# CodeYoung Trial-Class Booking Platform
+# CodeYoung Trial-Class Booking Platform & AI Chatbot
 
-A full-stack trial-class booking platform built with React, TypeScript, Node.js, Express, PostgreSQL, and Prisma, engineered to handle multi-timezone scheduling, daylight-saving time transitions, and concurrent booking assignments accurately without timezone drift or double-booking.
+A full-stack trial-class booking platform and intelligent conversational assistant built with **React**, **TypeScript**, **Node.js**, **Express**, **PostgreSQL**, and **Prisma**. Engineered to handle multi-timezone scheduling, daylight-saving time transitions, concurrent booking transactions, and conversational booking with **Groq AI**.
+
+---
+
+## 🏛️ System Architecture
+
+```mermaid
+flowchart TD
+    subgraph Client ["Client (React + Vite + TypeScript)"]
+        UI["Landing & Course Pages"]
+        AuthUI["Login / Register / Forgot Password"]
+        DashUI["Parent & Admin Portals"]
+        ChatWidget["AI Chatbot Widget (ChatWindow, ChatInput, QuickActions)"]
+        AuthCtx["AuthContext (JWT & Session Management)"]
+    end
+
+    subgraph Backend ["Backend API (Node.js + Express + TypeScript)"]
+        Router["Express Router & Rate Limiting"]
+        AuthMw["Auth & RBAC Middleware"]
+        ZodVal["Zod Validation Layer"]
+        
+        subgraph ChatModule ["Chat Module (server/src/modules/chat/)"]
+            ChatCtrl["Chat Controller (/api/chat)"]
+            ChatSvc["Chat Service (OpenAI SDK / Groq Client)"]
+            ToolDisp["Tool Dispatcher (11 Registered Tools)"]
+            Prompts["System Prompts & Strict Guardrails"]
+        end
+
+        subgraph CoreServices ["Core Domain Services"]
+            AuthSvc["AuthService (bcrypt + JWT tokens)"]
+            AvailSvc["AvailabilityService (Luxon Timezone Engine)"]
+            BookSvc["BookingService (Prisma Transactions)"]
+            AdminSvc["AdminService (Mentor & Schedule Mgmt)"]
+            OtpSvc["OtpService (6-Digit Code Factory)"]
+            EmailSvc["EmailService (Brevo API & Dev Dispatch)"]
+        end
+    end
+
+    subgraph AIInference ["AI Cloud Inference"]
+        GroqAPI["Groq Cloud API (openai/gpt-oss-120b)"]
+    end
+
+    subgraph Persistence ["Persistence & External Services"]
+        DB[("PostgreSQL Database (Prisma ORM)")]
+        BrevoRelay["Brevo SMTP / API Email Relay"]
+    end
+
+    %% Client to Backend
+    UI --> Router
+    AuthUI --> Router
+    DashUI --> Router
+    ChatWidget --> Router
+    AuthCtx -.->|Bearer JWT| AuthMw
+
+    %% Backend Routing
+    Router --> ZodVal
+    ZodVal --> AuthMw
+    AuthMw --> ChatCtrl
+    AuthMw --> CoreServices
+
+    %% Chat & AI Flow
+    ChatCtrl --> ChatSvc
+    ChatSvc <-->|Tool Calling / Prompts| GroqAPI
+    ChatSvc --> ToolDisp
+    ToolDisp --> AuthSvc
+    ToolDisp --> AvailSvc
+    ToolDisp --> BookSvc
+    ToolDisp --> OtpSvc
+
+    %% Service Operations
+    AuthSvc --> DB
+    AvailSvc --> DB
+    BookSvc --> DB
+    AdminSvc --> DB
+    OtpSvc --> DB
+    OtpSvc --> EmailSvc
+    BookSvc --> EmailSvc
+    EmailSvc --> BrevoRelay
+```
 
 ---
 
 ## ⚡ Quick Start: How to Navigate & Run the Project
 
 ### 1. Prerequisites
-- **Node.js**: `v18.x` or `v20.x` or higher
+- **Node.js**: `v18.x`, `v20.x`, or `v22.x`
 - **npm**: `v9.x` or higher
-- **PostgreSQL**: Running locally or via Docker
+- **PostgreSQL**: Running locally, via Docker, or cloud-hosted
 
 ---
 
-### 2. How to Navigate the Project
+### 2. Project Structure
 The repository is structured as an **npm monorepo**:
 ```bash
-# Root Directory (Monorepo root for commands)
+# Monorepo Root
 d:\code_young\
 
 # Frontend Workspace (React + Vite + Tailwind CSS)
-cd client
+client/
 
 # Backend Workspace (Node.js + Express + Prisma)
-cd server
+server/
 ```
 
 ---
 
 ### 3. Step-by-Step Setup & Run Commands
 
-Open your terminal in the root `code_young` directory and run:
+From the root `code_young` directory:
 
 #### Step 1: Install Dependencies
 ```bash
@@ -38,15 +116,17 @@ npm install
 ```
 
 #### Step 2: Configure Environment Variables
-Create your `.env` file from `.env.example`:
+Copy `.env.example` to create your local `.env` and `server/.env`:
 ```bash
 # On Windows PowerShell:
 Copy-Item .env.example .env
+Copy-Item .env.example server/.env
 
 # On Linux/macOS/Git Bash:
 cp .env.example .env
+cp .env.example server/.env
 ```
-*(Ensure your `DATABASE_URL` matches your local PostgreSQL credentials in `.env`)*
+*(Fill in your PostgreSQL `DATABASE_URL` and `GROQ_API_KEY` in `.env`)*
 
 #### Step 3: Initialize Database & Seed Mentors
 ```bash
@@ -56,7 +136,7 @@ npm run prisma:generate
 # Run Database Migrations
 npx prisma migrate deploy
 
-# Seed Admin & 10 Mentors
+# Seed Default Admin & 10 Mentors with Availability
 npm run prisma:seed
 ```
 
@@ -64,76 +144,72 @@ npm run prisma:seed
 ```bash
 npm run dev
 ```
-> Both the React frontend (`http://localhost:5173`) and Express backend (`http://localhost:4000`) will start simultaneously.
+> Starts both the React frontend (`http://localhost:5173`) and Express backend (`http://localhost:4000`) simultaneously.
 
 ---
 
-### 4. How to Navigate the Web Application
+### 4. Web Application Navigation & Routes
 
-| Route / Feature | URL | Description | Default Credentials |
+| Route / Feature | URL | Description | Access |
 | :--- | :--- | :--- | :--- |
 | **🏠 Landing Page** | `http://localhost:5173/` | Hero section, course exploration, and trial features | *Public* |
-| **📅 Book Trial Class** | `http://localhost:5173/book` | 3-step live booking with email OTP & real-time slot selection | *Public* |
-| **📊 Parent Dashboard** | `http://localhost:5173/dashboard` | Manage booked classes, student info & class links | Parent Login |
-| **🔑 Parent Login** | `http://localhost:5173/login` | Secure JWT login (automatically redirects to dashboard) | Parent Email / Password |
-| **📝 Parent Register** | `http://localhost:5173/register` | Sign up with email OTP verification | New Parent |
-| **🛡️ Admin Portal** | `http://localhost:5173/admin` | Live metrics, daily capacity meter & calendar date slot checker | `admin@codeyoung.example` / `AdminSecurePassword123!` |
-| **👨‍🏫 Admin Mentors** | `http://localhost:5173/admin/mentors` | Toggle active mentors & inspect daily 2-class limits | Admin Only |
-| **📋 Admin Bookings** | `http://localhost:5173/admin/bookings` | View full schedule, copy class links & cancel classes | Admin Only |
-| **🚀 Backend API** | `http://localhost:4000/api` | REST API health check (`/api/health`) | Backend Service |
+| **🤖 AI Chatbot** | Floating bubble on all pages | Interactive assistant for booking, login, OTP, navigation | *Public / Authenticated* |
+| **📅 Book Trial Class** | `http://localhost:5173/book` | 3-step live booking with email OTP & real-time slot selection | *Public / Authenticated* |
+| **📊 Parent Dashboard** | `http://localhost:5173/dashboard` | Manage booked classes, student info & virtual class links | *Parent Only* |
+| **🔑 Parent Login** | `http://localhost:5173/login` | Secure JWT login (auto-redirects to dashboard) | *Public* |
+| **📝 Parent Register** | `http://localhost:5173/register` | Sign up with email OTP verification | *Public* |
+| **🛡️ Admin Portal** | `http://localhost:5173/admin` | Live metrics, daily capacity meter & bookings review | `admin@codeyoung.example` / `AdminSecurePassword123!` |
+| **👨‍🏫 Admin Mentors** | `http://localhost:5173/admin/mentors` | Toggle active mentors & inspect daily 2-class limits | *Admin Only* |
+| **📋 Admin Bookings** | `http://localhost:5173/admin/bookings` | View full schedule, copy class links & cancel classes | *Admin Only* |
+| **🚀 Backend API** | `http://localhost:4000/api` | REST API health check (`/api/health`) | *Service* |
 
 ---
 
-### 5. Running Tests & Production Builds
+## 🤖 AI Chatbot System
 
-```bash
-# Run all 92 client & server tests
-npm test
+The platform features an embedded **Groq AI Conversational Assistant** available across all pages.
 
-# Run type-checks and production bundle build (Vite + TypeScript)
-npm run build
-```
+### Core Capabilities:
+1. **Conversational Booking Flow with 6-Digit Email OTP**:
+   - The user selects a course (Math, Coding, English, Science), student grade, date, and timezone.
+   - The assistant queries real available slots (`get_available_slots`) without fabricating data.
+   - When the user confirms the slot, the assistant triggers `send_booking_otp` to email a 6-digit code.
+   - Upon receiving the code in chat, the assistant validates it via `confirm_booking` and executes an atomic Prisma transaction to lock in the mentor and booking.
+2. **In-Chat Direct Authentication (Login & Logout)**:
+   - Users can type their email and password directly into the chat. The assistant calls `login_user`, verifies credentials via `bcryptjs`, issues JWT tokens, updates the frontend session, and redirects to the dashboard.
+   - Saying *"log out"* or *"sign out"* triggers `logout_user`, terminating the session and returning to `/login`.
+3. **Dynamic Natural Language Site Navigation**:
+   - Users can say *"navigate to home"*, *"go to blog"*, *"show courses"*, *"contact page"*, etc.
+   - The assistant invokes `navigate_to_page` to trigger client-side route transitions and smooth section scrolling (e.g. `/#courses`).
 
----
-
-## 1. Project Overview
-
-The CodeYoung Trial-Class Booking Platform automates the scheduling and assignment of live 45-minute interactive trial classes (Mathematics, Coding, Science, English) between parents worldwide and mentors in diverse timezones (such as India `Asia/Kolkata`, US `America/New_York`, and UK `Europe/London`).
-
-All slot generation, availability checks, mentor load balancing, and persistence enforce timezone safety, strict daily capacity limits, and ACID transaction guarantees.
-
----
-
-## 2. Key Features
-
-- **Responsive Landing Page & Navigation**: Modern hero section, course exploration, value propositions, interactive header navigation with dropdown menus, mobile navigation drawer, and footer.
-- **Parent Registration & JWT Authentication**: Secure user registration, password hashing via `bcryptjs`, short-lived JWT access tokens, and HTTP-only refresh tokens.
-- **Parent Dashboard**: Protected parent portal displaying upcoming confirmed classes, mentor assignments, meeting links, and student profiles.
-- **Timezone-Safe Slot Generation**: Dynamic 45-minute trial slot computation from mentor local working hours mapped to parent local viewing times without manual offset math.
-- **DST & Wall-Clock Protection**: Spring-forward gap detection and fall-back ambiguity resolution powered by Luxon.
-- **Fair Mentor Load Balancing**: Automatic assignment of the least-loaded eligible mentor with slot overlap prevention.
-- **Strict Daily Capacity Limit**: Hard cap of maximum 2 classes per mentor evaluated in the mentor's local calendar day (`00:00` to `23:59:59.999` in mentor's IANA timezone).
-- **Prisma Interactive Transactions**: Atomic database transactions ensuring zero double-booking even under concurrent slot requests.
-- **Unique Class Links**: Generation of reproducible virtual classroom links (`https://meet.codeyoung.example/room/cy-...`).
-- **Dual Notification Engine**: Transactional confirmation and cancellation emails sent with respective parent-local and mentor-local formatted timestamps.
-- **Protected Admin Dashboard & Routes**:
-  - `/admin`: High-level metrics (Total Mentors, Active Mentors, Total Bookings, Confirmed Classes), quick action links, and recent bookings.
-  - `/admin/mentors`: Real-time mentor active/inactive status toggle, timezone display, and local daily booking capacity tracker.
-  - `/admin/bookings`: Full booking history with parent-local and mentor-local timestamps, status filter (`ALL`, `CONFIRMED`, `CANCELLED`), copyable class links, and admin-triggered cancellation with automated email alerts.
-  - **Backend RBAC**: Express middleware strictly enforces `ADMIN` role on all `/api/admin/*` endpoints.
+### Registered Chat Tools:
+| Tool Name | Purpose |
+| :--- | :--- |
+| `get_course_information` | Returns detailed curriculum, age ranges, and highlights for courses |
+| `get_trial_class_information` | Explains trial class duration (45 min), mentor matching, and class links |
+| `get_authentication_status` | Checks if current session has valid JWT authentication |
+| `login_user` | Authenticates parent via email/password and sets JWT session |
+| `logout_user` | Logs out current parent, clears tokens, and navigates to login |
+| `get_available_slots` | Queries backend for real mentor availability in parent local time |
+| `send_booking_otp` | Dispatches a 6-digit verification code to the parent's email |
+| `confirm_booking` | Verifies OTP code and finalizes trial booking inside a Prisma transaction |
+| `navigate_to_page` | Dispatches navigation actions to any site route or anchor |
+| `redirect_to_login` | Navigates unauthenticated users to the login screen |
+| `redirect_to_booking_page` | Directs users to the manual booking form |
 
 ---
 
-## 3. Technology Stack
+## 5. Technology Stack
 
 - **Frontend**:
   - React 18, TypeScript, Vite
   - React Router DOM v7
-  - Tailwind CSS
+  - Tailwind CSS & Lucide Icons
   - Vitest & React Testing Library
 - **Backend**:
   - Node.js & Express
   - TypeScript (ES Modules)
+  - OpenAI SDK (configured with Groq Cloud endpoint)
   - Luxon (Timezone calculations & IANA handling)
   - Zod (Runtime input validation)
   - JSON Web Tokens (`jsonwebtoken`) & `bcryptjs`
@@ -142,280 +218,79 @@ All slot generation, availability checks, mentor load balancing, and persistence
 - **Database & ORM**:
   - PostgreSQL
   - Prisma ORM v6
-- **Tooling & Monorepo**:
-  - npm Workspaces (`client` and `server`)
-  - ESLint 9 & Prettier
+- **Email & Notification**:
+  - Brevo API / SMTP Relay
+  - Development In-Memory OTP Dispatcher
 
 ---
 
-## 4. Folder Structure
+## 6. Environment Configuration
 
-```
-code_young/
-├── client/                     # React + Vite frontend workspace
-│   ├── src/
-│   │   ├── __tests__/          # Frontend component & page tests
-│   │   │   ├── AdminPages.test.tsx
-│   │   │   ├── App.test.tsx
-│   │   │   ├── AuthPages.test.tsx
-│   │   │   └── BookTrialPage.test.tsx
-│   │   ├── components/         # Reusable UI components (Navbar, Header, AdminHeader, Footer, etc.)
-│   │   ├── context/            # AuthContext & state management
-│   │   ├── pages/              # Route pages (HomePage, BookTrialPage, Admin*, DashboardPage, etc.)
-│   │   ├── App.tsx             # Route definitions & ProtectedRoute guards
-│   │   └── main.tsx            # React root mount
-│   ├── package.json
-│   ├── tailwind.config.js
-│   └── vite.config.ts
-├── server/                     # Express + TypeScript backend workspace
-│   ├── src/
-│   │   ├── __tests__/          # Backend integration & unit test suites
-│   │   │   ├── admin.test.ts
-│   │   │   ├── auth.test.ts
-│   │   │   ├── availability.test.ts
-│   │   │   ├── booking.test.ts
-│   │   │   ├── health.test.ts
-│   │   │   ├── notification.test.ts
-│   │   │   ├── otp.test.ts
-│   │   │   ├── parent.test.ts
-│   │   │   ├── timezone.test.ts
-│   │   │   └── trial.test.ts
-│   │   ├── config/             # JWT & environment configurations
-│   │   ├── controllers/        # Express route handlers (admin, auth, booking, parent, trial, etc.)
-│   │   ├── middleware/         # Auth & RBAC middlewares (authenticate, requireAdmin, requireRole)
-│   │   ├── schemas/            # Zod validation schemas
-│   │   ├── services/           # Business logic & domain services
-│   │   │   ├── email/          # Transactional email service (DevelopmentEmailService)
-│   │   │   ├── otp/            # OTP dispatch & verification service
-│   │   │   ├── adminService.ts
-│   │   │   ├── authService.ts
-│   │   │   ├── availabilityService.ts
-│   │   │   └── bookingService.ts
-│   │   ├── utils/              # Timezone utilities, AppError, Prisma client
-│   │   ├── app.ts              # Express application configuration
-│   │   └── index.ts            # Server entry point
-│   ├── package.json
-│   └── tsconfig.json
-├── prisma/
-│   ├── migrations/             # Database migration SQL files
-│   ├── schema.prisma           # Prisma data models & relations
-│   └── seed.ts                 # Database seeding script (Admin & Mentors)
-├── docs/                       # Architecture & development documentation
-├── AGENTS.md                   # Core project rules and architectural invariants
-├── PLAN.md                     # Step-by-step implementation milestones
-├── package.json                # Root monorepo configuration
-└── README.md                   # Main project documentation
-```
-
----
-
-## 5. PostgreSQL Setup & Environment Configuration
-
-### Environment Variables
-
-Copy `.env.example` to create your local `.env` file in the root directory:
-
-```bash
-cp .env.example .env
-```
-
-Configurable variables:
+### Root `.env` & `server/.env` Schema
 
 ```env
+# Application Environment
 NODE_ENV=development
 PORT=4000
 CLIENT_URL=http://localhost:5173
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/codeyoung_dev?schema=public
 VITE_API_BASE_URL=http://localhost:4000/api
-JWT_SECRET=your_jwt_secret_key_change_in_production
-JWT_REFRESH_SECRET=your_refresh_secret_key_change_in_production
+
+# Database
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/codeyoung_dev?schema=public
+
+# Default Admin Credentials
 ADMIN_EMAIL=admin@codeyoung.example
 ADMIN_PASSWORD=AdminSecurePassword123!
 ADMIN_NAME=CodeYoung Admin
-```
 
-### PostgreSQL Database Setup
+# Email / Brevo API / SMTP
+BREVO_API_KEY=xkeysib-...
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-16-char-app-password
+EMAIL_FROM="CodeYoung <your-email@gmail.com>"
 
-1. Ensure PostgreSQL is installed and running on your system.
-2. Create the development database:
-
-```sql
-CREATE DATABASE codeyoung_dev;
-```
-
----
-
-## 6. Prisma Migration & Seeding Commands
-
-### Generate Prisma Client
-
-```bash
-npm run prisma:generate
-```
-
-### Apply Migrations
-
-To apply existing migrations to your PostgreSQL database:
-
-```bash
-npx prisma migrate deploy
-```
-
-For local development migrations:
-
-```bash
-npx prisma migrate dev --name init
-```
-
-### Seed Database
-
-Populates the default Admin account and 10 mentors with recurring Monday–Friday availability (09:00–17:00 IST):
-
-```bash
-npm run prisma:seed
+# Groq AI Chat Configuration
+GROQ_API_KEY=gsk_...
+GROQ_MODEL=openai/gpt-oss-120b
+AI_CHAT_ENABLED=true
 ```
 
 ---
 
-## 7. Development Startup Commands
+## 7. Testing & Quality Assurance
 
-### Install All Workspace Dependencies
-
-```bash
-npm install
-```
-
-### Start Both Frontend and Backend Concurrently
+Run the comprehensive test suite across backend and frontend workspaces:
 
 ```bash
-npm run dev
-```
-
-- Frontend: `http://localhost:5173`
-- Backend API: `http://localhost:4000`
-- API Health Check: `http://localhost:4000/api/health`
-
-### Start Individual Workspaces
-
-- **Frontend Only**:
-  ```bash
-  npm run dev:client
-  ```
-- **Backend Only**:
-  ```bash
-  npm run dev:server
-  ```
-
----
-
-## 8. Test Commands & Quality Assurance
-
-Run the complete test suite (92 tests across 14 test suites covering both workspaces):
-
-```bash
+# Run all server and client test suites
 npm test
+
+# Run backend unit and integration tests (98 tests)
+npm run test:server
+
+# Run frontend React component & widget tests (26 tests)
+npm run test:client
+
+# Type-check TypeScript codebase
+npm run typecheck
+
+# Code formatting & linting
+npm run lint
+npm run format
 ```
-
-### Individual Test Commands
-
-- **Backend Tests (Unit & Integration)**:
-  ```bash
-  npm run test:server
-  ```
-- **Frontend Tests (Vitest & Testing Library)**:
-  ```bash
-  npm run test:client
-  ```
-- **TypeScript Typecheck**:
-  ```bash
-  npm run typecheck
-  ```
-- **ESLint**:
-  ```bash
-  npm run lint
-  ```
-- **Prettier Format Check**:
-  ```bash
-  npm run format:check
-  ```
-- **Prettier Write**:
-  ```bash
-  npm run format
-  ```
-- **Production Build (Client & Server)**:
-  ```bash
-  npm run build
-  ```
 
 ---
 
-## 9. System Architectural Workflows & Invariants
+## 8. Architectural Invariants & Business Rules
 
-### Authentication & Password Reset Flow
-
-1. User registers via `/api/auth/register` with email verification or logs in via `/api/auth/login`.
-2. Server validates inputs using Zod, hashes passwords with `bcryptjs`, and issues:
-   - A short-lived (15 min) JWT Access Token returned in the JSON payload.
-   - A long-lived (7 day) HTTP-only, secure Refresh Token stored as a cookie and hashed in the database.
-3. Protected endpoints verify the `Bearer <token>` via `authenticate` middleware.
-4. Token refreshes occur via `/api/auth/refresh` without interrupting user sessions across browser reloads.
-5. **Forgot Password**: Users can reset their forgotten password via `/api/auth/forgot-password/*` using a 6-digit email OTP and cryptographic reset token.
-
-### Email OTP Verification & Dispatch Behavior
-
-- Transactional emails and verification OTP codes are dispatched using the **Brevo API** (with fallback to `DevelopmentEmailService` in local test suites).
-- 6-digit verification codes are delivered directly to the parent's email inbox for account registration, password resets, and trial requests.
-- The OTP hash is securely stored with a 10-minute expiry time.
-- Implements a 60-second resend cooldown and locks after 5 consecutive failed attempts.
-
-### Booking Flow
-
-1. **Parent Submission**: Parent completes the trial request form with student details, subject interest, and IANA timezone.
-2. **Email OTP Verification**: Parent verifies their email address via the 6-digit verification code delivered to their inbox.
-3. **Slot Fetching**: Client requests `/api/availability?date=YYYY-MM-DD&timezone=IANA_TZ`.
-4. **Slot Selection & Booking**: Parent selects a slot and submits `/api/bookings` with `trialRequestId` and `startUtc`.
-5. **Confirmation**: System executes transaction, pairs mentor, generates class link, formats local timestamps, dispatches notifications, and renders confirmation screen.
-
-### Mentor Assignment Logic
-
-1. System queries active mentors having availability matching the requested day-of-week and time range.
-2. Filters out mentors with an existing booking overlapping the `[startUtc, startUtc + 45min]` interval.
-3. Filters out mentors who have already reached their daily booking limit for that calendar day in their local timezone.
-4. Selects the eligible mentor with the **lowest number of confirmed bookings on that date** (least-loaded).
-
-### Maximum Two Classes Per Mentor Per Local Day
-
-- Daily capacity is evaluated strictly from the mentor's perspective (`00:00:00` to `23:59:59.999` in the mentor's local timezone).
-- For a mentor in `Asia/Kolkata`, a class at `2026-10-12 01:00 UTC` (which is `06:30 IST` on Oct 12) counts towards Oct 12.
-- Hard limit of 2 bookings/day prevents mentor fatigue and guarantees teaching quality.
-
-### UTC and Timezone Strategy
-
-- **Persistence**: All appointment timestamps (`startUtc`, `endUtc`) are stored in UTC ISO format in PostgreSQL.
-- **Separate Timezones**: Parent timezone (e.g., `America/New_York`) and mentor timezone snapshot (e.g., `Asia/Kolkata`) are stored separately on each booking record.
-- **No Offset Math**: All conversions use Luxon's `DateTime.setZone(ianaZone)`. Fixed offset strings (like `UTC+5`) are strictly rejected.
-
-### Daylight Saving Time (DST) Handling
-
-- **Spring-Forward**: Luxon detects invalid wall-clock gaps (e.g., `02:30` on US Spring Forward date) and shifts the slot forward to valid wall-clock time (`03:30 EDT`).
-- **Fall-Back**: Detects ambiguous repeated wall-clock hours and deterministically selects the standard first instance.
-
-### Dummy Class-Link Behavior
-
-- Virtual classroom links are deterministically generated per booking using the format `https://meet.codeyoung.example/room/cy-<random-hash>`.
-- The identical class link is embedded in parent confirmation emails, mentor notification emails, parent dashboard, and admin management tables.
-
-### Email Notification Behavior
-
-- Uses `DevelopmentEmailService` in local and test environments to log transactional email payloads to memory and server output.
-- Dispatches dual notifications on booking creation:
-  - **Parent Email**: Formatted with parent-local time (e.g., `2026-10-12 01:00 EDT (-04:00)`).
-  - **Mentor Email**: Formatted with mentor-local time (e.g., `2026-10-12 10:30 IST (+05:30)`).
-- On admin cancellation, cancellation notices with reason and local timestamps are immediately sent to both parties.
-- Email failures do not roll back successful database bookings (fail-safe notification execution).
-
-
-### Future Improvements
-.
-- Live WebRTC / Zoom API classroom integration to replace simulated dummy meeting rooms.
-
+1. **UTC Timestamp Storage**: All appointment times (`startUtc`, `endUtc`) are strictly stored in UTC ISO format in PostgreSQL.
+2. **Timezone Separation**: Parent timezone (e.g. `America/New_York`) and mentor timezone snapshot (e.g. `Asia/Kolkata`) are stored independently on each record.
+3. **No Manual Offset Math**: All timezone conversions use Luxon's `DateTime.setZone(ianaZone)`. Fixed offset strings (e.g., `UTC+5`) are rejected.
+4. **Daylight Saving Time (DST) Safety**: Spring-forward gaps are advanced to valid wall-clock time; fall-back ambiguities deterministically resolve to the initial standard instance.
+5. **Strict Mentor Capacity Cap**: Hard maximum of **2 classes per mentor per local calendar day** (`00:00:00` to `23:59:59.999` in mentor's IANA timezone).
+6. **Least-Loaded Mentor Assignment**: Automated selection of the eligible active mentor with the lowest scheduled load on the requested date.
+7. **ACID Transactions**: Prisma interactive transactions guarantee zero double-booking even under high concurrent slot selection.
+8. **Virtual Classroom Links**: Deterministic generation of virtual room links (`https://meet.codeyoung.example/room/cy-...`) shared across parent and mentor email notifications.
